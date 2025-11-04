@@ -1,4 +1,4 @@
-TINDER COPILOT
+# TINDER COPILOT
 Imagine if you had Github Copilot, but for rizz...
 
 ...you don't have to imagine anymore, I made it as a Chrome extension.
@@ -6,7 +6,7 @@ Imagine if you had Github Copilot, but for rizz...
 Now, armed with more knowledge, I'm totally scrapping the previous version and rewriting it with Typescript
 because js is giving me too much of a headache and to be honest, the previous version is totally sloppy and the way I approached it makes me want to throw up
 
-Usage
+## Usage
 ~~Tinder Copilot utilizes Gemini-2.5-Flash from AI Studio~~
 
 ~~Tinder Copilot will automatically add so-called Rizz buttons to your Tinder conversation~~
@@ -17,7 +17,7 @@ Usage
 
 As of now, It's totally unusable, the above will be true shortly
 
-Installation
+## Installation
 In order to install the extension, either clone the repository or download it as .ZIP and unpack it
 
 Next, go to chrome://extensions, check "Developer mode" and "Install unpacked" and select the repository folder
