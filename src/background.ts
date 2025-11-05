@@ -1,3 +1,5 @@
+let GEMINI_API_KEY = "SIKE_YOU_ARE_NOT_GETTING_MY_API_KEY";
+import { GoogleGenAI } from "@google/genai";
 async function getMatchId(full: boolean): Promise<string> {
   let queryOptions = { active: true, currentWindow: true };
   let [tab] = await chrome.tabs.query(queryOptions);
@@ -48,6 +50,59 @@ async function fetchMessagesFromAPI(matchId: string, xauthToken: string) {
   console.log("Messages Data:", data);
   return data;
 }
+async function evaluateMessages(data: any) {
+  let messagesStripped = data.data.messages.map((msg: any) => {
+    return {
+      from: msg.from,
+      to: msg.to,
+      message: msg.message,
+      timestamp: msg.timestamp,
+    };
+  });
+  let systemInstruction = `
+        You are a smooth-talking, funny, confident dating app expert — basically a master of rizz and social flow.
+        Your job is to rate how flirty, natural, and engaging each message sounds in the context of a dating chat.
+        Don’t be stiff or robotic — imagine how real people on Tinder would feel reading it.
+        Keep track of who is who based on the "from" and "to" ID fields and consider the full conversation history.
+        For each message:
+        - Give it a score from 1 to 10 (1 = awkward or boring, 8 = pure charisma).
+        - Write a short, casual reason (like “too formal”, “funny and confident”, “try-hard but works”, etc.), just a few words.
+        - Always consider the previous messages — context matters.
+        
+        Keep the output as valid JSON, structured like this:
+        [
+          { "index": 0, "score": 8, "reason": "playful and confident" },
+          { "index": 1, "score": 5, "reason": "a bit dry, needs more personality" }
+        ]
+        
+        Stay consistent, fun, and slightly cheeky in tone. Never overanalyze or moralize — it's all about the *vibe*.
+        `;
+  console.log("data to evaluate:", data);
+  let evaluationResponse = await getGeminiResponse(
+    [...messagesStripped],
+    systemInstruction
+  );
+
+  console.log("Evaluation Response:", evaluationResponse);
+  return evaluationResponse;
+}
+
+async function getGeminiResponse(data: any, systemInstruction: string) {
+  let prompt = { contents: [data] };
+  console.log("Gemini Prompt:", prompt.contents);
+  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: JSON.stringify(prompt),
+    config: {
+      systemInstruction: systemInstruction,
+    },
+  });
+
+  let result = response.text?.slice(7, -3); //removes ```json in the beginning and ``` at the end
+  console.log("Raw Gemini Response:", result);
+  return JSON.parse(result as string);
+}
 chrome.runtime.onMessage.addListener(handleMessages);
 async function handleMessages(
   request: any,
@@ -56,19 +111,24 @@ async function handleMessages(
 ) {
   switch (request.action) {
     case "Evaluate":
-      getMatchId(true).then((matchId) => {
-        sendResponse({ matchId: matchId });
+      let matchId = await getMatchId(true);
+      let authToken = await getXauthToken();
+      let messages = await fetchMessagesFromAPI(matchId, authToken);
+      let evaluation = await evaluateMessages(messages).then((result: any) => {
+        sendResponse({ evaluation: result });
       });
+
       return true;
       break;
     case "Rizz":
       let Id = await getMatchId(true);
       let token = await getXauthToken();
-      fetchMessagesFromAPI(Id, token);
+      let data = await fetchMessagesFromAPI(Id, token);
+      //getGeminiResponse(data);
       return true;
       break;
     default:
-      sendResponse({}); // Send an empty response for unrecognized actions
+      sendResponse({});
       break;
   }
 }

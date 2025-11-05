@@ -57,13 +57,13 @@ function placeButtons() {
 function applyRizz() {
     return __awaiter(this, void 0, void 0, function* () {
         let response = yield chrome.runtime.sendMessage({ action: "Rizz" });
-        console.log("Received matchId:", response.matchId);
+        console.log("Received matchId:", response.evaluation);
     });
 }
 function applyEvaluations() {
     return __awaiter(this, void 0, void 0, function* () {
         let response = yield chrome.runtime.sendMessage({ action: "Evaluate" });
-        console.log("Received evaluation results:", response);
+        console.log("Received evaluation results:", response.evaluation);
     });
 }
 window.addEventListener("load", () => {
@@ -94,9 +94,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (sender.id === chrome.runtime.id && request.action === "GetXauthToken") {
         const apiToken = localStorage.getItem("TinderWeb/APIToken");
         console.log("Przyszła wiadomość z backgroundu!");
-        console.log(apiToken); // Wyświetla token w konsoli
-        console.log(request.payload); // "Elo, co tam na froncie? Podpisano, B."
-        // (Opcjonalnie) Odsyłamy odpowiedź
+        console.log(apiToken);
+        console.log(request.payload);
         sendResponse({
             token: apiToken,
         });
