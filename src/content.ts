@@ -1,3 +1,5 @@
+import { Language } from "@google/genai";
+
 function placeButtons() {
   const classes = `Lts($ls-s) Z(0) CenterAlign Mx(a) Cur(p) Tt(u) Ell Bdrs(100px) Px(24px) Px(20px)--s Py(0) Mih(40px) Pos(r) Ov(h) C(#fff) Bg($c-pink):h::b Bg($c-pink):f::b Bg($c-pink):a::b Trsdu($fast) Trsp($background) Bg($g-ds-background-brand-gradient) button--primary-shadow StyledButton Bxsh($bxsh-btn) Fw($semibold) focus-button-style Mb(16px) As(fe) `;
   const selector = [
@@ -12,7 +14,7 @@ function placeButtons() {
   const chatBox = document.querySelector(selector);
 
   if (!chatBox) {
-    console.log("nie udalo sie postawic buttona");
+    console.log("Button placement failed");
     return false;
   }
 
@@ -32,10 +34,46 @@ function placeButtons() {
   chatBox.appendChild(btnRizz);
   return true;
 }
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+async function setup() {
+  let userId;
+  let profilePhoto;
+  while (!userId) {
+    await sleep(200);
+    profilePhoto = document.querySelector(
+      '[class~="D(b)"][class~="Pos(r)"][class~="Expand"][class~="Bdrs(50%)"]'
+    ) as HTMLElement;
+    if (profilePhoto) {
+      const bgUrl = profilePhoto?.style.backgroundImage;
+      const match = bgUrl?.match(/gotinder\.com\/([a-f0-9]+)\//);
+      userId = match ? match[1] : null;
+      console.log("UserID:", userId);
+    }
+  }
+
+  let lang = (document.querySelector("html") as HTMLHtmlElement).lang;
+  console.log(lang);
+  await chrome.runtime.sendMessage({
+    action: "Setup",
+    language: lang,
+    userId: userId,
+  });
+}
 async function applyRizz(event: MouseEvent) {
   event.stopPropagation();
   event.preventDefault();
-  let response = await chrome.runtime.sendMessage({ action: "Rizz" });
+  const button = document.querySelector(".rizzButton") as HTMLElement;
+  if (button) {
+    const width = button.offsetWidth;
+    button.style.width = `${width}px`;
+    button.classList.remove("Bg($g-ds-background-brand-gradient)");
+    button.textContent = "Working...";
+  }
+  let response = await chrome.runtime.sendMessage({
+    action: "Rizz",
+  });
   console.log("Received rizz message:", response.message);
   const chatInput = document.querySelector("textarea");
   if (chatInput) {
@@ -43,12 +81,25 @@ async function applyRizz(event: MouseEvent) {
     const inputEvent = new Event("input", { bubbles: true });
     chatInput.dispatchEvent(inputEvent);
   }
+  if (button) {
+    button.classList.add("Bg($g-ds-background-brand-gradient)");
+    button.textContent = "Rizz me";
+    button.style.removeProperty("width");
+  }
 }
 async function applyEvaluations(event: MouseEvent) {
   event.stopPropagation();
   event.preventDefault();
-
-  let response = await chrome.runtime.sendMessage({ action: "Evaluate" });
+  const button = document.querySelector(".evaluateButton") as HTMLElement;
+  if (button) {
+    const width = button.offsetWidth;
+    button.style.width = `${width}px`;
+    button.classList.remove("Bg($g-ds-background-brand-gradient)");
+    button.textContent = "Working...";
+  }
+  let response = await chrome.runtime.sendMessage({
+    action: "Evaluate",
+  });
   console.log("Received evaluation results:", response.evaluation);
   const allMsgBoxes = Array.from(document.querySelectorAll(".msg"));
   allMsgBoxes.reverse();
@@ -57,23 +108,17 @@ async function applyEvaluations(event: MouseEvent) {
     if (msgBox) {
       let badge = document.createElement("img");
       let badgeText = document.createElement("img");
-
-      //badge.textContent = `⭐${evalItem.score} (${evalItem.reason})`;
       if (msgBox.classList.contains("msg--received")) {
         Object.assign(badge.style, {
           position: "absolute",
           top: "0",
           left: "100%",
-
           transform: "translate(-60%, -60%)",
-
           zIndex: "2",
-
           backgroundColor: "#e53935",
           width: "3rem",
           height: "3rem",
           borderRadius: "50%",
-
           display: "inline-block",
         });
       } else {
@@ -94,7 +139,7 @@ async function applyEvaluations(event: MouseEvent) {
           display: "inline-block",
         });
       }
-      badge.alt = evalItem.reason;
+      badge.title = evalItem.reason;
       switch (evalItem.score) {
         case 1:
           badge.src = chrome.runtime.getURL("assessments/blunder.png");
@@ -135,6 +180,11 @@ async function applyEvaluations(event: MouseEvent) {
       (msgBox.parentElement as HTMLElement).appendChild(badge);
     }
   });
+  if (button) {
+    button.classList.add("Bg($g-ds-background-brand-gradient)");
+    button.textContent = "Evaluate Messages";
+    button.style.removeProperty("width");
+  }
 }
 window.addEventListener("load", () => {
   const chatContainer =
@@ -152,6 +202,7 @@ window.addEventListener("load", () => {
           let placed = placeButtons();
           if (placed) {
             console.log("❤️‍🔥Rizz buttons placed!");
+            setup();
           }
         }
         break;
