@@ -1,5 +1,5 @@
 function placeButtons() {
-  const classes = `button Lts($ls-s) Z(0) CenterAlign Mx(a) Cur(p) Tt(u) Ell Bdrs(100px) Px(24px) Px(20px)--s Py(0) Mih(40px) Pos(r) Ov(h) C(#fff) Bg($c-pink):h::b Bg($c-pink):f::b Bg($c-pink):a::b Trsdu($fast) Trsp($background) Bg($g-ds-background-brand-gradient) button--primary-shadow StyledButton Bxsh($bxsh-btn) Fw($semibold) focus-button-style Mb(16px) As(fe) `;
+  const classes = `Lts($ls-s) Z(0) CenterAlign Mx(a) Cur(p) Tt(u) Ell Bdrs(100px) Px(24px) Px(20px)--s Py(0) Mih(40px) Pos(r) Ov(h) C(#fff) Bg($c-pink):h::b Bg($c-pink):f::b Bg($c-pink):a::b Trsdu($fast) Trsp($background) Bg($g-ds-background-brand-gradient) button--primary-shadow StyledButton Bxsh($bxsh-btn) Fw($semibold) focus-button-style Mb(16px) As(fe) `;
   const selector = [
     ".Bgc\\(\\$c-ds-background-primary\\)",
     ".Pos\\(r\\)",
@@ -22,27 +22,119 @@ function placeButtons() {
   btnEvaluate.classList += "evaluateButton";
   btnEvaluate.style.marginLeft = "3px";
   btnEvaluate.style.marginRight = "3px";
-  btnEvaluate.onclick = async () => {
-    await applyEvaluations();
-  };
+  btnEvaluate.addEventListener("click", applyEvaluations);
   const btnRizz = document.createElement("span");
   btnRizz.classList += classes;
   btnRizz.classList += "rizzButton";
   btnRizz.textContent = "Rizz me";
-  btnRizz.onclick = async () => {
-    await applyRizz();
-  };
+  btnRizz.addEventListener("click", applyRizz);
   chatBox.appendChild(btnEvaluate);
   chatBox.appendChild(btnRizz);
   return true;
 }
-async function applyRizz() {
+async function applyRizz(event: MouseEvent) {
+  event.stopPropagation();
+  event.preventDefault();
   let response = await chrome.runtime.sendMessage({ action: "Rizz" });
-  console.log("Received matchId:", response.evaluation);
+  console.log("Received rizz message:", response.message);
+  const chatInput = document.querySelector("textarea");
+  if (chatInput) {
+    (chatInput as HTMLTextAreaElement).value = response.message;
+    const inputEvent = new Event("input", { bubbles: true });
+    chatInput.dispatchEvent(inputEvent);
+  }
 }
-async function applyEvaluations() {
+async function applyEvaluations(event: MouseEvent) {
+  event.stopPropagation();
+  event.preventDefault();
+
   let response = await chrome.runtime.sendMessage({ action: "Evaluate" });
   console.log("Received evaluation results:", response.evaluation);
+  const allMsgBoxes = Array.from(document.querySelectorAll(".msg"));
+  allMsgBoxes.reverse();
+  response.evaluation.forEach((evalItem: any) => {
+    let msgBox = allMsgBoxes[evalItem.index] as HTMLElement;
+    if (msgBox) {
+      let badge = document.createElement("img");
+      let badgeText = document.createElement("img");
+
+      //badge.textContent = `⭐${evalItem.score} (${evalItem.reason})`;
+      if (msgBox.classList.contains("msg--received")) {
+        Object.assign(badge.style, {
+          position: "absolute",
+          top: "0",
+          left: "100%",
+
+          transform: "translate(-60%, -60%)",
+
+          zIndex: "2",
+
+          backgroundColor: "#e53935",
+          width: "3rem",
+          height: "3rem",
+          borderRadius: "50%",
+
+          display: "inline-block",
+        });
+      } else {
+        Object.assign(badge.style, {
+          position: "absolute",
+          top: "0",
+          right: "100%",
+
+          transform: "translate(35%, -60%)",
+
+          zIndex: "2",
+
+          backgroundColor: "red",
+          width: "3rem",
+          height: "3rem",
+          borderRadius: "50%",
+
+          display: "inline-block",
+        });
+      }
+      badge.alt = evalItem.reason;
+      switch (evalItem.score) {
+        case 1:
+          badge.src = chrome.runtime.getURL("assessments/blunder.png");
+          break;
+        case 2:
+          badge.src = chrome.runtime.getURL("assessments/mistake.png");
+          badge.style.backgroundColor = "orange";
+          break;
+        case 3:
+          badge.src = chrome.runtime.getURL("assessments/innacuracy.png");
+          badge.style.backgroundColor = "yellow";
+          break;
+        case 4:
+          badge.src = chrome.runtime.getURL("assessments/book.png");
+          badge.style.backgroundColor = "brown";
+          break;
+        case 5:
+          badge.src = chrome.runtime.getURL("assessments/good.png");
+          badge.style.backgroundColor = "#8AB382";
+          break;
+        case 6:
+          badge.src = chrome.runtime.getURL("assessments/best.png");
+          badge.style.backgroundColor = "#61ff31ff";
+          break;
+        case 7:
+          badge.src = chrome.runtime.getURL("assessments/excellent.png");
+          badge.style.backgroundColor = "#61ff31ff";
+          break;
+        case 8:
+          badge.src = chrome.runtime.getURL("assessments/brilliant.png");
+          badge.style.backgroundColor = "teal";
+          break;
+        default:
+          badgeText.textContent = "❓";
+          break;
+      }
+      badge.appendChild(badgeText);
+      (msgBox.parentElement as HTMLElement).appendChild(badge);
+    }
+  });
 }
 window.addEventListener("load", () => {
   const chatContainer =

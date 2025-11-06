@@ -15780,7 +15780,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-let GEMINI_API_KEY = "SIKE_YOU_ARE_NOT_GETTING_MY_API_KEY";
+let GEMINI_API_KEY = "SIKE_YOU_WONT_GET_MY_KEY";
 const genai_1 = __webpack_require__(/*! @google/genai */ "./node_modules/@google/genai/dist/web/index.mjs");
 function getMatchId(full) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -15801,9 +15801,7 @@ function getMatchId(full) {
             else {
                 matchId = (_b = pathSegments.slice(3)[0]) === null || _b === void 0 ? void 0 : _b.substring(0, 24);
             }
-            return new Promise((resolve) => {
-                resolve(matchId);
-            });
+            return matchId;
         }
     });
 }
@@ -15812,12 +15810,10 @@ function getXauthToken() {
         let queryOptions = { active: true, currentWindow: true };
         let [tab] = yield chrome.tabs.query(queryOptions);
         console.log(tab);
-        return new Promise((resolve) => {
-            chrome.tabs.sendMessage(tab.id, { action: "GetXauthToken" }, (response) => {
-                console.log("Xauth Token:", response.token);
-                resolve(response.token);
-            });
+        const response = yield chrome.tabs.sendMessage(tab.id, {
+            action: "GetXauthToken",
         });
+        return response.token;
     });
 }
 function fetchMessagesFromAPI(matchId, xauthToken) {
@@ -15849,7 +15845,7 @@ function evaluateMessages(data) {
         Don’t be stiff or robotic — imagine how real people on Tinder would feel reading it.
         Keep track of who is who based on the "from" and "to" ID fields and consider the full conversation history.
         For each message:
-        - Give it a score from 1 to 10 (1 = awkward or boring, 8 = pure charisma).
+        - Give it a score from 1 to 8 (1 = awkward or boring, 8 = pure charisma).
         - Write a short, casual reason (like “too formal”, “funny and confident”, “try-hard but works”, etc.), just a few words.
         - Always consider the previous messages — context matters.
         
@@ -15858,60 +15854,91 @@ function evaluateMessages(data) {
           { "index": 0, "score": 8, "reason": "playful and confident" },
           { "index": 1, "score": 5, "reason": "a bit dry, needs more personality" }
         ]
-        
+        index 0 refers to the most recent message, index 1 to the one before that, and so on.
         Stay consistent, fun, and slightly cheeky in tone. Never overanalyze or moralize — it's all about the *vibe*.
         `;
         console.log("data to evaluate:", data);
         let evaluationResponse = yield getGeminiResponse([...messagesStripped], systemInstruction);
-        console.log("Evaluation Response:", evaluationResponse);
-        return evaluationResponse;
+        let result = evaluationResponse.slice(7, -3); //removes ```json in the beginning and ``` at the end
+        console.log("Raw Gemini Response:", result);
+        return JSON.parse(result);
+    });
+}
+function nextMessage(data, matchId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let messagesStripped = data.data.messages.map((msg) => {
+            return {
+                from: msg.from,
+                to: msg.to,
+                message: msg.message,
+                timestamp: msg.timestamp,
+            };
+        });
+        let userId = messagesStripped[0].from.includes(matchId)
+            ? messagesStripped[0].to
+            : messagesStripped[0].from;
+        let systemInstruction = `
+        You are a smooth-talking, funny, confident dating app expert — basically a master of rizz and social flow.
+        Your job is to Provide the next best message to send in this dating chat, matching the language of the previous messages.
+        You are the user with id equal to ${userId}.
+        Don’t be stiff or robotic — imagine how real people on Tinder would feel reading it.
+        Keep track of who is who based on the "from" and "to" ID fields and consider the full conversation history.
+        Provide one message only, no explanations, or your own thoughts or assumptions, the message should be ready to send to the conversation partner.
+        Stay consistent, fun, and slightly cheeky in tone. Never overanalyze or moralize — it's all about the *vibe*.
+        `;
+        console.log("data to evaluate:", data);
+        let nextMessageResponse = yield getGeminiResponse([...messagesStripped], systemInstruction);
+        return nextMessageResponse;
     });
 }
 function getGeminiResponse(data, systemInstruction) {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a;
-        let prompt = { contents: [data] };
+        let prompt = { contents: [{ role: "user", content: JSON.stringify(data) }] };
         console.log("Gemini Prompt:", prompt.contents);
         const ai = new genai_1.GoogleGenAI({ apiKey: GEMINI_API_KEY });
         const response = yield ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: JSON.stringify(prompt),
             config: {
+                thinkingConfig: {
+                    thinkingBudget: 3,
+                },
                 systemInstruction: systemInstruction,
             },
         });
-        let result = (_a = response.text) === null || _a === void 0 ? void 0 : _a.slice(7, -3); //removes ```json in the beginning and ``` at the end
-        console.log("Raw Gemini Response:", result);
-        return JSON.parse(result);
+        return response.text;
     });
 }
 chrome.runtime.onMessage.addListener(handleMessages);
 function handleMessages(request, sender, sendResponse) {
-    return __awaiter(this, void 0, void 0, function* () {
-        switch (request.action) {
-            case "Evaluate":
+    switch (request.action) {
+        case "Evaluate":
+            (() => __awaiter(this, void 0, void 0, function* () {
                 let matchId = yield getMatchId(true);
                 let authToken = yield getXauthToken();
                 let messages = yield fetchMessagesFromAPI(matchId, authToken);
-                let evaluation = yield evaluateMessages(messages).then((result) => {
-                    sendResponse({ evaluation: result });
-                });
-                return true;
-                // removed by dead control flow
+                let evaluation = yield evaluateMessages(messages);
+                sendResponse({ evaluation: evaluation });
+            }))();
+            return true;
+            // removed by dead control flow
 
-            case "Rizz":
+        case "Rizz":
+            (() => __awaiter(this, void 0, void 0, function* () {
                 let Id = yield getMatchId(true);
                 let token = yield getXauthToken();
                 let data = yield fetchMessagesFromAPI(Id, token);
-                //getGeminiResponse(data);
-                return true;
-                // removed by dead control flow
+                let nextMsg = yield nextMessage(data, Id);
+                sendResponse({ message: nextMsg });
+            }))();
+            //getGeminiResponse(data);
+            return true;
+            // removed by dead control flow
 
-            default:
-                sendResponse({});
-                break;
-        }
-    });
+        default:
+            sendResponse({});
+            break;
+    }
 }
 
 
