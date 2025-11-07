@@ -7,7 +7,7 @@ module.exports = {
   devtool: "cheap-module-source-map",
 
   entry: {
-    background: path.resolve(__dirname, "src", "background.ts"),
+    background: path.resolve(__dirname, "src/background", "background.ts"),
     content: path.resolve(__dirname, "src", "content.ts"),
     //popup: path.resolve(__dirname, "src", "popup.ts"),
   },
@@ -18,6 +18,9 @@ module.exports = {
   },
 
   resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+    },
     extensions: [".ts", ".js"],
   },
 

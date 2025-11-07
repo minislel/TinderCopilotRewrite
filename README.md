@@ -19,6 +19,8 @@ Tinder Copilot will automatically add so-called Rizz buttons to your Tinder conv
 
 In order to use it, install the extension and just go to any Tinder conversation with any match
 
+DOUBLE DATE CHAT SUPPORT ADDED!
+
 ## Installation
 
 Prerequisites:

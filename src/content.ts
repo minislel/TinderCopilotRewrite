@@ -37,20 +37,26 @@ function placeButtons() {
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+async function getUserIdFromQuerySelector(selector: string) {
+  let userId;
+  const profilePhoto = document.querySelector(selector) as HTMLElement;
+  if (profilePhoto) {
+    const bgUrl = profilePhoto?.style.backgroundImage;
+    const match = bgUrl?.match(/gotinder\.com\/([a-f0-9]+)\//);
+    userId = match ? match[1] : null;
+    console.log("UserID:", userId);
+    return userId;
+  }
+  return userId;
+}
 async function setup() {
   let userId;
   let profilePhoto;
   while (!userId) {
     await sleep(200);
-    profilePhoto = document.querySelector(
+    userId = await getUserIdFromQuerySelector(
       '[class~="D(b)"][class~="Pos(r)"][class~="Expand"][class~="Bdrs(50%)"]'
-    ) as HTMLElement;
-    if (profilePhoto) {
-      const bgUrl = profilePhoto?.style.backgroundImage;
-      const match = bgUrl?.match(/gotinder\.com\/([a-f0-9]+)\//);
-      userId = match ? match[1] : null;
-      console.log("UserID:", userId);
-    }
+    );
   }
 
   let lang = (document.querySelector("html") as HTMLHtmlElement).lang;
@@ -224,6 +230,15 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
     sendResponse({
       token: apiToken,
+    });
+  } else if (
+    sender.id === chrome.runtime.id &&
+    request.action === "GetUserIdFromQuerySelector"
+  ) {
+    getUserIdFromQuerySelector(request.data).then((Id) => {
+      sendResponse({
+        userId: Id,
+      });
     });
   }
 
