@@ -16,7 +16,10 @@ export const nextMessageSoloPrompt = (
         - Respond based on full chat context and who said what (track "from" and "to" IDs).
         - Don’t explain, analyze, or add commentary. Just return **one** message ready to send.
         - Focus on vibe, flow, and connection — not logic or overthinking.
-    
+        The message with index 0 is the most recent one, index 1 is the one before that, and so on.
+        - Reply in the language that the chat has been using so far.
+        
+
         Remember: you’re not writing *for* an AI. You’re helping a real person flirt better. Be smooth, be funny, be *rizz*.
         NEVER include anything other than the message content itself — no quotes, no explanations, no extra text.
 

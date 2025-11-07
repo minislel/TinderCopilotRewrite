@@ -1,5 +1,7 @@
 import { Language } from "@google/genai";
+import { Evaluation } from "./types";
 
+let evalCache: Record<string, Array<Evaluation>> = {};
 function placeButtons() {
   const classes = `Lts($ls-s) Z(0) CenterAlign Mx(a) Cur(p) Tt(u) Ell Bdrs(100px) Px(24px) Px(20px)--s Py(0) Mih(40px) Pos(r) Ov(h) C(#fff) Bg($c-pink):h::b Bg($c-pink):f::b Bg($c-pink):a::b Trsdu($fast) Trsp($background) Bg($g-ds-background-brand-gradient) button--primary-shadow StyledButton Bxsh($bxsh-btn) Fw($semibold) focus-button-style Mb(16px) As(fe) `;
   const selector = [
@@ -24,7 +26,7 @@ function placeButtons() {
   btnEvaluate.classList += "evaluateButton";
   btnEvaluate.style.marginLeft = "3px";
   btnEvaluate.style.marginRight = "3px";
-  btnEvaluate.addEventListener("click", applyEvaluations);
+  btnEvaluate.addEventListener("click", getEvaluations);
   const btnRizz = document.createElement("span");
   btnRizz.classList += classes;
   btnRizz.classList += "rizzButton";
@@ -37,34 +39,13 @@ function placeButtons() {
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-async function getUserIdFromQuerySelector(selector: string) {
-  let userId;
-  const profilePhoto = document.querySelector(selector) as HTMLElement;
-  if (profilePhoto) {
-    const bgUrl = profilePhoto?.style.backgroundImage;
-    const match = bgUrl?.match(/gotinder\.com\/([a-f0-9]+)\//);
-    userId = match ? match[1] : null;
-    console.log("UserID:", userId);
-    return userId;
-  }
-  return userId;
-}
-async function setup() {
-  let userId;
-  let profilePhoto;
-  while (!userId) {
-    await sleep(200);
-    userId = await getUserIdFromQuerySelector(
-      '[class~="D(b)"][class~="Pos(r)"][class~="Expand"][class~="Bdrs(50%)"]'
-    );
-  }
 
+async function setup() {
   let lang = (document.querySelector("html") as HTMLHtmlElement).lang;
   console.log(lang);
   await chrome.runtime.sendMessage({
     action: "Setup",
     language: lang,
-    userId: userId,
   });
 }
 async function applyRizz(event: MouseEvent) {
@@ -93,7 +74,71 @@ async function applyRizz(event: MouseEvent) {
     button.style.removeProperty("width");
   }
 }
-async function applyEvaluations(event: MouseEvent) {
+async function applyEvaluations(evals: Array<Evaluation>) {
+  console.log("Received evaluation results:", evals);
+  const allMsgBoxes = Array.from(document.querySelectorAll(".msg"));
+  allMsgBoxes.reverse();
+  evals.forEach((evalItem: any) => {
+    let msgBox = allMsgBoxes[evalItem.index] as HTMLElement;
+    if (msgBox) {
+      let badge = document.createElement("img");
+
+      Object.assign(badge.style, {
+        position: "absolute",
+        top: "0",
+        zIndex: "2",
+        backgroundColor: "red",
+        width: "3rem",
+        height: "3rem",
+        borderRadius: "50%",
+        display: "inline-block",
+      });
+      if (msgBox.classList.contains("msg--received")) {
+        Object.assign(badge.style, {
+          left: "100%",
+          transform: "translate(-60%, -60%)",
+        });
+      } else {
+        Object.assign(badge.style, {
+          right: "100%",
+          transform: "translate(35%, -60%)",
+        });
+      }
+
+      badge.title = evalItem.reason;
+      switch (evalItem.score) {
+        case 1:
+          badge.src = chrome.runtime.getURL("assessments/blunder.png");
+          break;
+        case 2:
+          badge.src = chrome.runtime.getURL("assessments/mistake.png");
+          break;
+        case 3:
+          badge.src = chrome.runtime.getURL("assessments/innacuracy.png");
+          break;
+        case 4:
+          badge.src = chrome.runtime.getURL("assessments/book.png");
+          break;
+        case 5:
+          badge.src = chrome.runtime.getURL("assessments/good.png");
+          break;
+        case 6:
+          badge.src = chrome.runtime.getURL("assessments/best.png");
+          break;
+        case 7:
+          badge.src = chrome.runtime.getURL("assessments/excellent.png");
+          break;
+        case 8:
+          badge.src = chrome.runtime.getURL("assessments/brilliant.png");
+          break;
+        default:
+          break;
+      }
+      (msgBox.parentElement as HTMLElement).appendChild(badge);
+    }
+  });
+}
+async function getEvaluations(event: MouseEvent) {
   event.stopPropagation();
   event.preventDefault();
   const button = document.querySelector(".evaluateButton") as HTMLElement;
@@ -106,90 +151,30 @@ async function applyEvaluations(event: MouseEvent) {
   let response = await chrome.runtime.sendMessage({
     action: "Evaluate",
   });
-  console.log("Received evaluation results:", response.evaluation);
-  const allMsgBoxes = Array.from(document.querySelectorAll(".msg"));
-  allMsgBoxes.reverse();
-  response.evaluation.forEach((evalItem: any) => {
-    let msgBox = allMsgBoxes[evalItem.index] as HTMLElement;
-    if (msgBox) {
-      let badge = document.createElement("img");
-      let badgeText = document.createElement("img");
-      if (msgBox.classList.contains("msg--received")) {
-        Object.assign(badge.style, {
-          position: "absolute",
-          top: "0",
-          left: "100%",
-          transform: "translate(-60%, -60%)",
-          zIndex: "2",
-          backgroundColor: "#e53935",
-          width: "3rem",
-          height: "3rem",
-          borderRadius: "50%",
-          display: "inline-block",
-        });
-      } else {
-        Object.assign(badge.style, {
-          position: "absolute",
-          top: "0",
-          right: "100%",
-
-          transform: "translate(35%, -60%)",
-
-          zIndex: "2",
-
-          backgroundColor: "red",
-          width: "3rem",
-          height: "3rem",
-          borderRadius: "50%",
-
-          display: "inline-block",
-        });
-      }
-      badge.title = evalItem.reason;
-      switch (evalItem.score) {
-        case 1:
-          badge.src = chrome.runtime.getURL("assessments/blunder.png");
-          break;
-        case 2:
-          badge.src = chrome.runtime.getURL("assessments/mistake.png");
-          badge.style.backgroundColor = "orange";
-          break;
-        case 3:
-          badge.src = chrome.runtime.getURL("assessments/innacuracy.png");
-          badge.style.backgroundColor = "yellow";
-          break;
-        case 4:
-          badge.src = chrome.runtime.getURL("assessments/book.png");
-          badge.style.backgroundColor = "brown";
-          break;
-        case 5:
-          badge.src = chrome.runtime.getURL("assessments/good.png");
-          badge.style.backgroundColor = "#8AB382";
-          break;
-        case 6:
-          badge.src = chrome.runtime.getURL("assessments/best.png");
-          badge.style.backgroundColor = "#61ff31ff";
-          break;
-        case 7:
-          badge.src = chrome.runtime.getURL("assessments/excellent.png");
-          badge.style.backgroundColor = "#61ff31ff";
-          break;
-        case 8:
-          badge.src = chrome.runtime.getURL("assessments/brilliant.png");
-          badge.style.backgroundColor = "teal";
-          break;
-        default:
-          badgeText.textContent = "❓";
-          break;
-      }
-      badge.appendChild(badgeText);
-      (msgBox.parentElement as HTMLElement).appendChild(badge);
-    }
-  });
+  await applyEvaluations(response.evaluations);
+  evalCache[response.conversationId] = response.evaluations;
   if (button) {
     button.classList.add("Bg($g-ds-background-brand-gradient)");
     button.textContent = "Evaluate Messages";
     button.style.removeProperty("width");
+  }
+}
+async function getThreadIdFromUrl() {
+  const url = new URL(window.location.href);
+  if (url.hostname !== "tinder.com") {
+    return "";
+  } else {
+    let pathSegments = url.pathname.split("/");
+    console.log("Path Segments:", pathSegments);
+    return pathSegments[3];
+  }
+}
+async function applyCachedEvaluations() {
+  let threadId = await getThreadIdFromUrl();
+
+  let cachedEvals = evalCache[threadId];
+  if (cachedEvals) {
+    await applyEvaluations(cachedEvals);
   }
 }
 window.addEventListener("load", () => {
@@ -209,6 +194,7 @@ window.addEventListener("load", () => {
           if (placed) {
             console.log("❤️‍🔥Rizz buttons placed!");
             setup();
+            applyCachedEvaluations();
           }
         }
         break;
@@ -221,6 +207,16 @@ window.addEventListener("load", () => {
     subtree: true,
   });
 });
+window.addEventListener("message", (event) => {
+  if (!event.source || event.source !== window) return;
+  const msg = event.data;
+  if (!msg || !msg.__RIZZ_FROM_PAGE) return;
+
+  chrome.runtime.sendMessage({
+    action: "FETCH_INTERCEPT",
+    data: msg.payload,
+  });
+});
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (sender.id === chrome.runtime.id && request.action === "GetXauthToken") {
     const apiToken = localStorage.getItem("TinderWeb/APIToken");
@@ -230,15 +226,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
     sendResponse({
       token: apiToken,
-    });
-  } else if (
-    sender.id === chrome.runtime.id &&
-    request.action === "GetUserIdFromQuerySelector"
-  ) {
-    getUserIdFromQuerySelector(request.data).then((Id) => {
-      sendResponse({
-        userId: Id,
-      });
     });
   }
 
