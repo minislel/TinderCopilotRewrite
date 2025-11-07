@@ -39,3 +39,10 @@ Prerequisites:
 4. Run `npm run dev`
 
 5. Go to chrome://extensions/, check "Developer mode" and 'load unpacked', select the `dist` folder
+
+## TODO
+
+- Error handling
+- User Popup for API key insertion
+- AI prompt improvement
+- Code cleanup
