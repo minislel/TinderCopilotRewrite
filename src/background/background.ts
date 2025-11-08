@@ -1,4 +1,3 @@
-let GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
 import { GoogleGenAI } from "@google/genai";
 import { Evaluation, Message } from "@/types";
 import {
@@ -11,6 +10,7 @@ import {
 import { fetchProfileData, fetchUserId } from "@/tinderAPI";
 import { handleEvaluate } from "@/handlers/evaluateHandler";
 import { handleRizz } from "@/handlers/rizzHandler";
+import { getAIResponse } from "@/AI/getAIResponse";
 let language: string;
 let userId: string;
 export let xauthToken: string;
@@ -64,7 +64,7 @@ export async function generateMessageGroupchat(
 
   let messageResponse;
   if (messages && messages.length > 0) {
-    messageResponse = await getGeminiResponse(
+    messageResponse = await getAIResponse(
       [...messages],
       nextMessageGroupChatPrompt(
         buddyProfile,
@@ -74,7 +74,7 @@ export async function generateMessageGroupchat(
       )
     );
   } else {
-    messageResponse = await getGeminiResponse(
+    messageResponse = await getAIResponse(
       [],
       firstMessageGroupChatPrompt(
         language,
@@ -97,7 +97,7 @@ export async function evaluateMessages(data: Array<Message>) {
   if (data.length === 0) {
     return [];
   }
-  const evaluationResponse = await getGeminiResponse([...data], evaluatePrompt);
+  const evaluationResponse = await getAIResponse([...data], evaluatePrompt);
 
   const result = (evaluationResponse as string).slice(7, -3); //removes ```json in the beginning and ``` at the end
 
@@ -124,12 +124,12 @@ export async function generateMessageSolo(
   const matchProfile = await fetchProfileData(matchId, xauthToken);
   let messageResponse;
   if (messages && messages.length > 0) {
-    messageResponse = await getGeminiResponse(
+    messageResponse = await getAIResponse(
       [...messages],
       nextMessageSoloPrompt(userId, matchProfile) as string
     );
   } else {
-    messageResponse = await getGeminiResponse(
+    messageResponse = await getAIResponse(
       [],
       firstMessageSoloPrompt(language, matchProfile)
     );
@@ -137,26 +137,6 @@ export async function generateMessageSolo(
   return messageResponse as string;
 }
 
-async function getGeminiResponse(data: any, systemPrompt: string) {
-  const prompt = {
-    contents: [{ role: "user", parts: [{ text: JSON.stringify(data) }] }],
-  };
-  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-  const temp = 0.76 + Math.random() * 0.15;
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt.contents,
-    config: {
-      temperature: temp,
-      thinkingConfig: {
-        thinkingBudget: 3,
-      },
-      systemInstruction: systemPrompt,
-    },
-  });
-
-  return response.text;
-}
 export async function getGroupConversationPartners(
   matchList: any,
   matchId: string
