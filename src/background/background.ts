@@ -1,6 +1,6 @@
-let GEMINI_API_KEY = "AIzaSyBrDUgN31pNudp_WNpY423j6x8J0kt6-do";
+let GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
 import { GoogleGenAI } from "@google/genai";
-import { Evaluation, Message, Profile } from "@/types";
+import { Evaluation, Message } from "@/types";
 import {
   evaluatePrompt,
   nextMessageGroupChatPrompt,
@@ -38,26 +38,19 @@ export async function getThreadIdFromUrl(full: boolean): Promise<string> {
     return matchId as string;
   }
 }
-export async function sendMessageToContentScript(action: any, data?: any) {
+export async function sendMessageToContentScript(
+  actionToSend: any,
+  dataToSend?: any
+) {
   const queryOptions = { active: true, currentWindow: true };
   const [tab] = await chrome.tabs.query(queryOptions);
   const response = await chrome.tabs.sendMessage(tab.id!, {
-    action: action,
-    data: data,
+    action: actionToSend,
+    data: dataToSend,
   });
   return response;
 }
-export async function generateMessageGroupchat(
-  buddyId: string,
-  match1Id: string,
-  match2Id: string,
-  messages: Array<Message>
-): Promise<string>;
-export async function generateMessageGroupchat(
-  buddyId: string,
-  match1Id: string,
-  match2Id: string
-): Promise<string>;
+
 export async function generateMessageGroupchat(
   buddyId: string,
   match1Id: string,
@@ -68,6 +61,7 @@ export async function generateMessageGroupchat(
   const match1Profile = await fetchProfileData(match1Id, xauthToken);
   const match2Profile = await fetchProfileData(match2Id, xauthToken);
   const userProfile = await fetchProfileData(userId, xauthToken);
+
   let messageResponse;
   if (messages && messages.length > 0) {
     messageResponse = await getGeminiResponse(
@@ -122,17 +116,12 @@ export async function evaluateMessages(data: Array<Message>) {
 
   return evaluations;
 }
-export async function generateMessageSolo(matchId: string): Promise<string>;
-export async function generateMessageSolo(
-  matchId: string,
-  messages: Array<Message>
-): Promise<string>;
+
 export async function generateMessageSolo(
   matchId: string,
   messages?: Array<Message>
 ): Promise<string> {
-  let xauthToken = await getXauthToken();
-  let matchProfile = await fetchProfileData(matchId, xauthToken);
+  const matchProfile = await fetchProfileData(matchId, xauthToken);
   let messageResponse;
   if (messages && messages.length > 0) {
     messageResponse = await getGeminiResponse(
@@ -191,15 +180,15 @@ export async function getGroupConversationPartners(
   }
   return userIds;
 }
-async function injectScriptToPage() {
-  const queryOptions = { active: true, currentWindow: true };
-  const [tab] = await chrome.tabs.query(queryOptions);
-  await chrome.scripting.executeScript({
-    target: { tabId: tab.id as number },
-    files: ["injectHook.js"],
-    world: "MAIN",
-  });
-}
+// async function injectScriptToPage() {
+//   const queryOptions = { active: true, currentWindow: true };
+//   const [tab] = await chrome.tabs.query(queryOptions);
+//   await chrome.scripting.executeScript({
+//     target: { tabId: tab.id as number },
+//     files: ["injectHook.js"],
+//     world: "MAIN",
+//   });
+// }
 chrome.runtime.onMessage.addListener(handleMessages);
 function handleMessages(
   request: any,
@@ -214,7 +203,7 @@ function handleMessages(
         userId = await fetchUserId(xauthToken);
         //injectScriptToPage();
       })();
-      return;
+      break;
     case "Evaluate":
       handleEvaluate().then((result) => {
         sendResponse(result);
@@ -227,6 +216,6 @@ function handleMessages(
       return true;
     default:
       sendResponse({});
-      return;
+      break;
   }
 }

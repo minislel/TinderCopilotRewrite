@@ -36,9 +36,9 @@ function placeButtons() {
   chatBox.appendChild(btnRizz);
   return true;
 }
-async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+// async function sleep(ms: number): Promise<void> {
+//   return new Promise((resolve) => setTimeout(resolve, ms));
+// }
 
 async function setup() {
   const lang = (document.querySelector("html") as HTMLHtmlElement).lang;
@@ -57,7 +57,7 @@ async function applyRizz(event: MouseEvent) {
     button.classList.remove("Bg($g-ds-background-brand-gradient)");
     button.textContent = "Working...";
   }
-  let response = await chrome.runtime.sendMessage({
+  const response = await chrome.runtime.sendMessage({
     action: "Rizz",
   });
   console.log("Received rizz message:", response.message);
@@ -78,9 +78,9 @@ async function applyEvaluations(evals: Array<Evaluation>) {
   const allMsgBoxes = Array.from(document.querySelectorAll(".msg"));
   allMsgBoxes.reverse();
   evals.forEach((evalItem: any) => {
-    let msgBox = allMsgBoxes[evalItem.index] as HTMLElement;
+    const msgBox = allMsgBoxes[evalItem.index] as HTMLElement;
     if (msgBox) {
-      let badge = document.createElement("img");
+      const badge = document.createElement("img");
 
       Object.assign(badge.style, {
         position: "absolute",
@@ -147,7 +147,7 @@ async function getEvaluations(event: MouseEvent) {
     button.classList.remove("Bg($g-ds-background-brand-gradient)");
     button.textContent = "Working...";
   }
-  let response = await chrome.runtime.sendMessage({
+  const response = await chrome.runtime.sendMessage({
     action: "Evaluate",
   });
   await applyEvaluations(response.evaluations);
@@ -188,7 +188,7 @@ window.addEventListener("load", () => {
     for (const mutation of mutationsList) {
       if (mutation.type === "childList") {
         if (!document.querySelector(".rizzButton")) {
-          let placed = placeButtons();
+          const placed = placeButtons();
           if (placed) {
             console.log("❤️‍🔥Rizz buttons placed!");
             setup();
@@ -205,27 +205,23 @@ window.addEventListener("load", () => {
     subtree: true,
   });
 });
-window.addEventListener("message", (event) => {
-  if (!event.source || event.source !== window) return;
-  const msg = event.data;
-  if (!msg || !msg.__RIZZ_FROM_PAGE) return;
+// window.addEventListener("message", (event) => {
+//   if (!event.source || event.source !== window) return;
+//   const msg = event.data;
+//   if (!msg || !msg.__RIZZ_FROM_PAGE) return;
 
-  chrome.runtime.sendMessage({
-    action: "FETCH_INTERCEPT",
-    data: msg.payload,
-  });
-});
+//   chrome.runtime.sendMessage({
+//     action: "FETCH_INTERCEPT",
+//     data: msg.payload,
+//   });
+// });
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (sender.id === chrome.runtime.id && request.action === "GetXauthToken") {
     const apiToken = localStorage.getItem("TinderWeb/APIToken");
-    console.log("Przyszła wiadomość z backgroundu!");
     console.log(apiToken);
-    console.log(request.payload);
-
     sendResponse({
       token: apiToken,
     });
   }
-
   return true;
 });
