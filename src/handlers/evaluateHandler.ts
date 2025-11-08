@@ -3,10 +3,10 @@ import { fetchMessagesFromAPI } from "@/tinderAPI";
 import { getThreadIdFromUrl } from "@/background/background";
 
 export async function handleEvaluate() {
-  let matchId = await getThreadIdFromUrl(true);
-  let authToken = await getXauthToken();
-  let messages = await fetchMessagesFromAPI(matchId, authToken);
-  let evaluation = await evaluateMessages(messages);
+  const matchId = await getThreadIdFromUrl(true);
+  const authToken = await getXauthToken();
+  const messages = await fetchMessagesFromAPI(matchId, authToken);
+  const evaluation = await evaluateMessages(messages);
 
   return { evaluations: evaluation, conversationId: matchId };
 }

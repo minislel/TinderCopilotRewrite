@@ -1,4 +1,4 @@
-import { Message, Profile } from "@/types";
+import { Profile } from "@/types";
 export const nextMessageSoloPrompt = (
   userId: string,
   matchProfile: Profile

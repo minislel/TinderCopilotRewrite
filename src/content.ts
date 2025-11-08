@@ -1,9 +1,9 @@
-import { Language } from "@google/genai";
 import { Evaluation } from "./types";
 
 let evalCache: Record<string, Array<Evaluation>> = {};
 function placeButtons() {
-  const classes = `Lts($ls-s) Z(0) CenterAlign Mx(a) Cur(p) Tt(u) Ell Bdrs(100px) Px(24px) Px(20px)--s Py(0) Mih(40px) Pos(r) Ov(h) C(#fff) Bg($c-pink):h::b Bg($c-pink):f::b Bg($c-pink):a::b Trsdu($fast) Trsp($background) Bg($g-ds-background-brand-gradient) button--primary-shadow StyledButton Bxsh($bxsh-btn) Fw($semibold) focus-button-style Mb(16px) As(fe) `;
+  const classes =
+    "Lts($ls-s) Z(0) CenterAlign Mx(a) Cur(p) Tt(u) Ell Bdrs(100px) Px(24px) Px(20px)--s Py(0) Mih(40px) Pos(r) Ov(h) C(#fff) Bg($c-pink):h::b Bg($c-pink):f::b Bg($c-pink):a::b Trsdu($fast) Trsp($background) Bg($g-ds-background-brand-gradient) button--primary-shadow StyledButton Bxsh($bxsh-btn) Fw($semibold) focus-button-style Mb(16px) As(fe) ";
   const selector = [
     ".Bgc\\(\\$c-ds-background-primary\\)",
     ".Pos\\(r\\)",
@@ -41,8 +41,7 @@ async function sleep(ms: number): Promise<void> {
 }
 
 async function setup() {
-  let lang = (document.querySelector("html") as HTMLHtmlElement).lang;
-  console.log(lang);
+  const lang = (document.querySelector("html") as HTMLHtmlElement).lang;
   await chrome.runtime.sendMessage({
     action: "Setup",
     language: lang,
@@ -164,15 +163,14 @@ async function getThreadIdFromUrl() {
   if (url.hostname !== "tinder.com") {
     return "";
   } else {
-    let pathSegments = url.pathname.split("/");
-    console.log("Path Segments:", pathSegments);
+    const pathSegments = url.pathname.split("/");
     return pathSegments[3];
   }
 }
 async function applyCachedEvaluations() {
-  let threadId = await getThreadIdFromUrl();
+  const threadId = await getThreadIdFromUrl();
 
-  let cachedEvals = evalCache[threadId];
+  const cachedEvals = evalCache[threadId];
   if (cachedEvals) {
     await applyEvaluations(cachedEvals);
   }

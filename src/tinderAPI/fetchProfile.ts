@@ -11,9 +11,9 @@ export async function fetchProfileData(
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
       },
     });
-    let result = await response.json();
-    let prof = result.results;
-    let profile: Profile = {
+    const result = await response.json();
+    const prof = result.results;
+    const profile: Profile = {
       id: prof._id,
       name: prof.name,
       age: prof.age,

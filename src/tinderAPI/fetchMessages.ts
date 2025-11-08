@@ -30,8 +30,8 @@ export async function fetchMessagesFromAPI(
 
   const data = await response.json();
   let index = 0;
-  let ObjectMessages = data.data?.messages || data.messages;
-  let messagesStripped: Array<Message> = ObjectMessages.map(
+  const ObjectMessages = data.data?.messages || data.messages;
+  const messagesStripped: Array<Message> = ObjectMessages.map(
     (msg: any): Message => {
       return {
         from: msg.from ?? msg.user_id,
