@@ -39,6 +39,36 @@ function placeButtons() {
 // async function sleep(ms: number): Promise<void> {
 //   return new Promise((resolve) => setTimeout(resolve, ms));
 // }
+function showToast(message: string) {
+  // sprawdź, czy nie ma już istniejącego toasta
+  const existingToast = document.querySelector("#tinderCopilotToast");
+  if (existingToast) existingToast.remove();
+  console.log("Showing toast:", message);
+  const toast = document.createElement("div");
+  toast.id = "tinderCopilotToast";
+  toast.textContent = message;
+
+  toast.style.position = "fixed";
+  toast.style.bottom = "30px";
+  toast.style.right = "30px";
+  toast.style.zIndex = "999999";
+  toast.style.padding = "12px 20px";
+  toast.style.borderRadius = "10px";
+  toast.style.fontSize = "14px";
+  toast.style.fontWeight = "600";
+  toast.style.color = "#fff";
+  toast.style.boxShadow = "0 2px 10px rgba(0,0,0,0.25)";
+  toast.style.transition = "opacity 0.3s ease";
+  toast.style.opacity = "1";
+  toast.style.background = "linear-gradient(90deg, #ff4b2b, #ff416c)";
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
 
 async function setup() {
   const lang = (document.querySelector("html") as HTMLHtmlElement).lang;
@@ -57,9 +87,19 @@ async function applyRizz(event: MouseEvent) {
     button.classList.remove("Bg($g-ds-background-brand-gradient)");
     button.textContent = "Working...";
   }
-  const response = await chrome.runtime.sendMessage({
-    action: "Rizz",
-  });
+  let response;
+  try {
+    response = await chrome.runtime.sendMessage({
+      action: "Rizz",
+    });
+  } catch (error) {
+    if (button) {
+      button.classList.add("Bg($g-ds-background-brand-gradient)");
+      button.textContent = "Rizz me";
+      button.style.removeProperty("width");
+    }
+  }
+
   console.log("Received rizz message:", response.message);
   const chatInput = document.querySelector("textarea");
   if (chatInput) {
@@ -73,12 +113,63 @@ async function applyRizz(event: MouseEvent) {
     button.style.removeProperty("width");
   }
 }
+
+async function getEvaluations(event: MouseEvent) {
+  event.stopPropagation();
+  event.preventDefault();
+  const button = document.querySelector(".evaluateButton") as HTMLElement;
+  if (button) {
+    const width = button.offsetWidth;
+    button.style.width = `${width}px`;
+    button.classList.remove("Bg($g-ds-background-brand-gradient)");
+    button.textContent = "Working...";
+  }
+
+  const response = await chrome.runtime.sendMessage({
+    action: "Evaluate",
+  });
+
+  await applyEvaluations(response.evaluations);
+  evalCache[response.conversationId] = response.evaluations;
+  if (button) {
+    button.classList.add("Bg($g-ds-background-brand-gradient)");
+    button.textContent = "Evaluate Messages";
+    button.style.removeProperty("width");
+  }
+}
+async function getThreadIdFromUrl() {
+  const url = new URL(window.location.href);
+  if (url.hostname !== "tinder.com") {
+    return "";
+  } else {
+    const pathSegments = url.pathname.split("/");
+    return pathSegments[3];
+  }
+}
+
 async function applyEvaluations(evals: Array<Evaluation>) {
   console.log("Received evaluation results:", evals);
-  const allMsgBoxes = Array.from(document.querySelectorAll(".msg"));
-  allMsgBoxes.reverse();
+  const allMsgBoxes = Array.from(
+    document.querySelectorAll(".msg")
+  ) as HTMLElement[];
+  const msgMap = new Map<string, HTMLElement>();
+  allMsgBoxes.forEach((msgBox) => {
+    const timeEl = msgBox.parentElement?.querySelector(
+      "time[datetime]"
+    ) as HTMLElement | null;
+    if (timeEl) {
+      const datetime = timeEl.getAttribute("datetime");
+      if (datetime) {
+        msgMap.set(datetime, msgBox);
+      }
+    }
+  });
+  console.log("Message map:", msgMap);
+  console.log("allMsgBoxes:", allMsgBoxes);
   evals.forEach((evalItem: any) => {
-    const msgBox = allMsgBoxes[evalItem.index] as HTMLElement;
+    //let msgBox: HTMLElement = document.createElement("img");
+    const msgBox = msgMap.get(evalItem.sentDate);
+    console.log("Evaluating message box for date:", evalItem, msgBox);
     if (msgBox) {
       const badge = document.createElement("img");
 
@@ -137,36 +228,6 @@ async function applyEvaluations(evals: Array<Evaluation>) {
     }
   });
 }
-async function getEvaluations(event: MouseEvent) {
-  event.stopPropagation();
-  event.preventDefault();
-  const button = document.querySelector(".evaluateButton") as HTMLElement;
-  if (button) {
-    const width = button.offsetWidth;
-    button.style.width = `${width}px`;
-    button.classList.remove("Bg($g-ds-background-brand-gradient)");
-    button.textContent = "Working...";
-  }
-  const response = await chrome.runtime.sendMessage({
-    action: "Evaluate",
-  });
-  await applyEvaluations(response.evaluations);
-  evalCache[response.conversationId] = response.evaluations;
-  if (button) {
-    button.classList.add("Bg($g-ds-background-brand-gradient)");
-    button.textContent = "Evaluate Messages";
-    button.style.removeProperty("width");
-  }
-}
-async function getThreadIdFromUrl() {
-  const url = new URL(window.location.href);
-  if (url.hostname !== "tinder.com") {
-    return "";
-  } else {
-    const pathSegments = url.pathname.split("/");
-    return pathSegments[3];
-  }
-}
 async function applyCachedEvaluations() {
   const threadId = await getThreadIdFromUrl();
 
@@ -222,6 +283,25 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     sendResponse({
       token: apiToken,
     });
+  } else if (sender.id === chrome.runtime.id && request.action === "Error") {
+    showToast(request.data.message);
+    if (request.data.function === "Evaluate") {
+      const button = document.querySelector(".evaluateButton") as HTMLElement;
+      if (button) {
+        button.classList.add("Bg($g-ds-background-brand-gradient)");
+        button.textContent = "Evaluate Messages";
+        button.style.removeProperty("width");
+      }
+    }
+    if (request.data.function === "Rizz") {
+      const button = document.querySelector(".rizzButton") as HTMLElement;
+      if (button) {
+        button.classList.add("Bg($g-ds-background-brand-gradient)");
+        button.textContent = "Rizz me";
+        button.style.removeProperty("width");
+      }
+    }
+    console.error("Error from background:", request.data.errorMessage);
   }
   return true;
 });

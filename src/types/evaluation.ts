@@ -3,4 +3,5 @@ export interface Evaluation {
   content: string;
   score: number;
   reason: string;
+  sentDate: string;
 }

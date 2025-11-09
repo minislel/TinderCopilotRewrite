@@ -1,4 +1,3 @@
-import { GoogleGenAI } from "@google/genai";
 import { Evaluation, Message } from "@/types";
 import {
   evaluatePrompt,
@@ -6,7 +5,7 @@ import {
   firstMessageGroupChatPrompt,
   nextMessageSoloPrompt,
   firstMessageSoloPrompt,
-} from "@/prompts";
+} from "@/AI/prompts";
 import { fetchProfileData, fetchUserId } from "@/tinderAPI";
 import { handleEvaluate } from "@/handlers/evaluateHandler";
 import { handleRizz } from "@/handlers/rizzHandler";
@@ -97,14 +96,19 @@ export async function evaluateMessages(data: Array<Message>) {
   if (data.length === 0) {
     return [];
   }
+
   const evaluationResponse = await getAIResponse([...data], evaluatePrompt);
 
-  const result = (evaluationResponse as string).slice(7, -3); //removes ```json in the beginning and ``` at the end
+  const result = (evaluationResponse as any).replace(
+    /^```json\s*|\s*```$/g,
+    ""
+  );
 
   console.log("Raw Gemini Response:", result);
   const evaluations: Array<Evaluation> = JSON.parse(result as string).map(
     (evalItem: any): Evaluation => {
       return {
+        sentDate: data[evalItem.index].sentDate,
         index: evalItem.index,
         score: evalItem.score,
         reason: evalItem.reason,
