@@ -12,6 +12,7 @@ import { handleRizz } from "@/handlers/rizzHandler";
 import { getAIResponse } from "@/AI/getAIResponse";
 let language: string;
 let userId: string;
+export let selectedProvider: string = "gemini";
 export let xauthToken: string;
 
 export async function getThreadIdFromUrl(full: boolean): Promise<string> {

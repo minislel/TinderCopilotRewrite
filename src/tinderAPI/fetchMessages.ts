@@ -61,6 +61,6 @@ export async function fetchMessagesFromAPI(
       };
     }
   );
-  messagesStripped.reverse();
+
   return messagesStripped;
 }
