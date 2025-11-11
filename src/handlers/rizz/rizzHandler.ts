@@ -17,6 +17,8 @@ import {
   userIntercepts,
   groupConversationsIntercepts,
   fetchIntercepts,
+  duoMatchList,
+  userProfile,
 } from "@/fetchInterception/fetchResponseStorage";
 export async function handleRizz() {
   const Id = await getThreadIdFromUrl(true);
@@ -29,6 +31,8 @@ export async function handleRizz() {
       ...groupConversationsIntercepts,
     ]);
     console.log("fetchIntercepts:", [...fetchIntercepts]);
+    console.log("DuoMatchList:", [...duoMatchList]);
+    console.log("UserProfile:", userProfile);
     if (!Id.includes("-")) {
       // Solo chat handling
       const idShort = await getThreadIdFromUrl(false);
