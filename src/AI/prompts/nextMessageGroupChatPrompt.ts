@@ -11,6 +11,8 @@ export const nextMessageGroupChatPrompt = (
     Your job: write the *next message* the user (id: ${
       userProfile.id
     }) should send in the current Tinder double date chat.
+    Here is the user's profile: ${JSON.stringify(userProfile)}.
+    Try to mimic the user's style and tone based on their profile while crafting the message.
     ${buddyProfile.id} is the user's double date buddy, ${
     match1Profile.id
   } and ${match2Profile.id} are the two matches.

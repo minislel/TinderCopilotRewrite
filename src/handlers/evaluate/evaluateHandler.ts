@@ -1,11 +1,11 @@
 import {
   getXauthToken,
-  evaluateMessages,
   sendMessageToContentScript,
 } from "@/background/background";
 import { serializeError } from "@/utils/serializeError";
 import { fetchMessagesFromAPI } from "@/tinderAPI";
 import { getThreadIdFromUrl } from "@/background/background";
+import { evaluateMessages } from "./evaluateMessages";
 
 export async function handleEvaluate() {
   try {

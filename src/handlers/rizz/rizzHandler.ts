@@ -1,17 +1,20 @@
 import {
   getThreadIdFromUrl,
-  generateMessageSolo,
-  generateMessageGroupchat,
   xauthToken,
-  getGroupConversationPartners,
   sendMessageToContentScript,
+  fetchIntercepts,
 } from "@/background/background";
 import { serializeError } from "@/utils/serializeError";
-
+import { generateMessageSolo } from "./generateSolo";
+import {
+  generateMessageGroupchat,
+  getGroupConversationPartners,
+} from "./generateGroupChat";
 import { fetchMessagesFromAPI, fetchUserMatches } from "@/tinderAPI";
 export async function handleRizz() {
   const Id = await getThreadIdFromUrl(true);
   try {
+    console.log("fetchIntercepts:", fetchIntercepts);
     if (!Id.includes("-")) {
       // Solo chat handling
       const idShort = await getThreadIdFromUrl(false);
@@ -47,8 +50,13 @@ export async function handleRizz() {
     }
   } catch (error: any) {
     console.error("Error in handleRizz:", error);
+    let msg = `Failed to generate rizz message. Error in function ${error.function}. Please try again, or see console for details.`;
+    if (error.function === "getAIResponse") {
+      msg = `Failed to generate rizz message. Error in function ${error.function}. Please try again, check your AI provider settings/API key, or see console for details.`;
+    }
+
     sendMessageToContentScript("Error", {
-      message: `Failed to generate rizz message. Error in function ${error.function}. Please try again, or see console for details.`,
+      message: msg,
       function: "Rizz",
       errorMessage: serializeError(error),
     });

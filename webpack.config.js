@@ -1,7 +1,6 @@
 const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 module.exports = {
   mode: "development",
 
@@ -36,11 +35,8 @@ module.exports = {
       },
       {
         test: /\.css$/i,
-        use: [
-          MiniCssExtractPlugin.loader, // 3. Wyciąga CSS do osobnego pliku
-          "css-loader", // 2. Tłumaczy CSS dla Webpacka
-          "postcss-loader", // 1. Przetwarza CSS (Tailwindem)
-        ],
+        include: path.resolve(__dirname, "src/popup/"),
+        use: ["style-loader", "css-loader", "postcss-loader"],
       },
     ],
   },
@@ -58,9 +54,6 @@ module.exports = {
       template: path.resolve(__dirname, "src/popup/", "popup.html"), // Skąd brać szablon
       filename: "popup.html", // Jak ma się nazywać w 'dist'
       chunks: ["popup"], // Mówi, żeby wstrzyknąć *TYLKO* 'popup.js'
-    }),
-    new MiniCssExtractPlugin({
-      filename: "popup.css", // Nazwiemy go 'popup.css'
     }),
   ],
 };

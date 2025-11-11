@@ -19,35 +19,39 @@
   </head>
   <body class="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white p-4">
     <div id="main-menu" class="view active space-y-3">
-      <h1 class="text-xl font-bold text-center">Ustawienia Copilota</h1>
+      <h1 class="text-xl font-bold text-center">
+        RizzCopilot Configuration 🤖
+      </h1>
 
       <div class="p-3 bg-white dark:bg-gray-700 rounded-lg text-center">
         <span class="text-sm text-gray-500 dark:text-gray-400"
-          >Aktywny Provider:</span
+          >Active AI Provider:</span
         >
-        <p id="current-provider-status" class="font-semibold text-lg">Brak</p>
+        <p id="current-provider-status" class="font-semibold text-lg">
+          None. Please select a provider.
+        </p>
       </div>
 
       <button
         id="go-to-gemini"
         class="w-full py-2 px-4 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg"
       >
-        Konfiguruj Gemini
+        Configure Gemini
       </button>
       <button
         id="go-to-openrouter"
         class="w-full py-2 px-4 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 rounded-lg"
       >
-        Konfiguruj OpenRouter
+        Configure OpenRouter
       </button>
     </div>
 
     <div id="gemini-menu" class="view space-y-3">
-      <h2 class="text-lg font-semibold">Ustawienia Gemini</h2>
+      <h2 class="text-lg font-semibold">Gemini Settings</h2>
 
       <div>
         <label for="gemini-key" class="block text-sm font-medium"
-          >Klucz API Gemini</label
+          >Gemini API Key</label
         >
         <input
           type="password"
@@ -56,29 +60,70 @@
           placeholder="Wklej swój klucz API..."
         />
       </div>
+      <div>
+        <label for="gemini-model" class="block text-sm font-medium"
+          >Select Model</label
+        >
+        <select
+          id="gemini-model"
+          class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md"
+        ></select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">
+          Analysis depth 🧠
+        </label>
+
+        <div
+          class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mb-1"
+        >
+          <span>0%</span>
+          <span id="gemini-budget-value" class="font-semibold text-blue-500"
+            >20%</span
+          >
+          <span>100%</span>
+        </div>
+
+        <input
+          type="range"
+          id="gemini-budget-slider"
+          min="100"
+          max="5000"
+          value="1000"
+          step="100"
+          class="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer range-lg"
+        />
+        <span class="font-semibold text-blue-500 text-center">
+          Depth analysis defines how thoroughly the AI analyzes the context
+          before generating a response. Higher values lead to more accurate and
+          relevant replies.<br />
+          Warning: High analysis depth will increase response time and resource
+          usage. It is recommended to keep the analysis depth below 50%.</span
+        >
+      </div>
 
       <div class="flex gap-2">
         <button
           id="save-gemini"
           class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
         >
-          Zapisz i Aktywuj
+          Save and Activate
         </button>
         <button
           data-target="main-menu"
           class="back-button w-1/3 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg hover:bg-gray-400"
         >
-          Wróć
+          Return
         </button>
       </div>
     </div>
 
     <div id="openrouter-menu" class="view space-y-3">
-      <h2 class="text-lg font-semibold">Ustawienia OpenRouter</h2>
+      <h2 class="text-lg font-semibold">OpenRouter Settings</h2>
 
       <div>
         <label for="openrouter-key" class="block text-sm font-medium"
-          >Klucz API OpenRouter</label
+          >OpenRouter API Key</label
         >
         <input
           type="password"
@@ -87,24 +132,15 @@
           placeholder="Wklej swój klucz API..."
         />
       </div>
+
       <div>
         <label for="openrouter-model" class="block text-sm font-medium"
-          >Wybierz Model</label
+          >Select Model</label
         >
         <select
           id="openrouter-model"
           class="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md"
-        >
-          <option value="openai/gpt-4o">OpenAI: GPT-4o</option>
-          <option value="anthropic/claude-3-opus">
-            Anthropic: Claude 3 Opus
-          </option>
-          <option value="anthropic/claude-3-haiku">
-            Anthropic: Claude 3 Haiku
-          </option>
-          <option value="google/gemini-pro-1.5">Google: Gemini Pro 1.5</option>
-          <option value="mistralai/mistral-large">Mistral: Large</option>
-        </select>
+        ></select>
       </div>
 
       <div class="flex gap-2">
@@ -112,13 +148,13 @@
           id="save-openrouter"
           class="w-full py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700"
         >
-          Zapisz i Aktywuj
+          Save and Activate
         </button>
         <button
           data-target="main-menu"
           class="back-button w-1/3 py-2 bg-gray-300 dark:bg-gray-600 rounded-lg hover:bg-gray-400"
         >
-          Wróć
+          Return
         </button>
       </div>
     </div>

@@ -1,6 +1,9 @@
-export default {
-  content: ["./popup/**/*.{html,ts,tsx}"],
+module.exports = {
+  content: ["./dist/*.html"],
   theme: {
+    extend: {},
+  },
+  variants: {
     extend: {},
   },
   plugins: [],

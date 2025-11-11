@@ -1,4 +1,5 @@
 import { Evaluation } from "./types";
+import { sleep } from "./utils/sleep";
 
 let evalCache: Record<string, Array<Evaluation>> = {};
 function placeButtons() {
@@ -36,11 +37,14 @@ function placeButtons() {
   chatBox.appendChild(btnRizz);
   return true;
 }
-// async function sleep(ms: number): Promise<void> {
-//   return new Promise((resolve) => setTimeout(resolve, ms));
-// }
+async function injectScriptToPage() {
+  const script = document.createElement("script");
+  script.src = chrome.runtime.getURL("injectHook.js");
+  (document.head || document.documentElement).appendChild(script);
+  console.log("Injected script to page");
+}
+
 function showToast(message: string) {
-  // sprawdź, czy nie ma już istniejącego toasta
   const existingToast = document.querySelector("#tinderCopilotToast");
   if (existingToast) existingToast.remove();
   console.log("Showing toast:", message);
@@ -72,6 +76,7 @@ function showToast(message: string) {
 
 async function setup() {
   const lang = (document.querySelector("html") as HTMLHtmlElement).lang;
+  //await sleep(1500);
   await chrome.runtime.sendMessage({
     action: "Setup",
     language: lang,
@@ -237,6 +242,7 @@ async function applyCachedEvaluations() {
   }
 }
 window.addEventListener("load", () => {
+  injectScriptToPage();
   const chatContainer =
     document.querySelector('[aria-label="Conversation history"]') ||
     document.body;
@@ -266,16 +272,17 @@ window.addEventListener("load", () => {
     subtree: true,
   });
 });
-// window.addEventListener("message", (event) => {
-//   if (!event.source || event.source !== window) return;
-//   const msg = event.data;
-//   if (!msg || !msg.__RIZZ_FROM_PAGE) return;
+window.addEventListener("message", (event) => {
+  if (!event.source || event.source !== window) return;
+  console.log("Content script received messageeee:", event.data);
+  const msg = event.data;
 
-//   chrome.runtime.sendMessage({
-//     action: "FETCH_INTERCEPT",
-//     data: msg.payload,
-//   });
-// });
+  chrome.runtime.sendMessage({
+    action: "FETCH_INTERCEPT",
+    data: msg.payload,
+    endpoint: msg.endpoint,
+  });
+});
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (sender.id === chrome.runtime.id && request.action === "GetXauthToken") {
     const apiToken = localStorage.getItem("TinderWeb/APIToken");

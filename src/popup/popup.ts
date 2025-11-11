@@ -1,24 +1,46 @@
 import "./popup.css";
 
+import { AIProvider } from "@/AI/AIProviderEnum";
+import { OpenRouterModel } from "@/AI/openrouterModelEnum";
+import { GeminiModel } from "@/AI/geminiModelEnum";
 interface ExtensionStorage {
-  aiProvider: "gemini" | "openrouter" | null;
+  aiProvider: AIProvider | null;
   geminiApiKey: string;
   openRouterApiKey: string;
-  openRouterModel: string;
+  openRouterModel: OpenRouterModel;
+  geminiModel: GeminiModel;
+  geminiThinkingBudget: number;
+}
+function mapTokensToRizz(tokens: number): number {
+  const MIN_TOKENS = 100;
+  const MAX_TOKENS = 5000;
+
+  const clampedTokens = Math.min(Math.max(tokens, MIN_TOKENS), MAX_TOKENS);
+
+  const range = MAX_TOKENS - MIN_TOKENS;
+  if (range === 0) return 100;
+
+  const ratio = (clampedTokens - MIN_TOKENS) / range;
+
+  const percent = ratio * 100;
+
+  return Math.round(percent / 5) * 5;
 }
 
 // Domyślne wartości dla naszego storage
 const defaultStorage: ExtensionStorage = {
-  aiProvider: null,
+  aiProvider: AIProvider.OPENROUTER,
   geminiApiKey: "",
   openRouterApiKey: "",
-  openRouterModel: "openai/gpt-4o",
+  openRouterModel: OpenRouterModel.MINIMAX,
+  geminiModel: GeminiModel.GeminiFlashLatest,
+  geminiThinkingBudget: 128,
 };
 
 function getEl<T extends HTMLElement>(id: string): T {
   const el = document.getElementById(id);
   if (!el) {
-    throw new Error(`Krytyczny błąd: Nie znaleziono elementu o ID: #${id}`);
+    throw new Error(`${id} not found`);
   }
   return el as T;
 }
@@ -38,6 +60,23 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   const geminiKeyInput = getEl<HTMLInputElement>("gemini-key");
+  const geminiModelSelect = getEl<HTMLSelectElement>("gemini-model");
+  const geminiRizzSlider = getEl<HTMLInputElement>("gemini-budget-slider");
+  const geminiRizzValue = getEl<HTMLSpanElement>("gemini-budget-value");
+
+  geminiRizzSlider.addEventListener("input", (e) => {
+    const percentValue: number = (e.target as HTMLInputElement)
+      .value as unknown as number;
+    geminiRizzValue.textContent = `${mapTokensToRizz(percentValue)}%`;
+  });
+  const geminiModelOptions = Object.values(GeminiModel);
+  geminiModelOptions.forEach((model) => {
+    const option = document.createElement("option");
+    option.value = model;
+    option.textContent = model;
+    geminiModelSelect.appendChild(option);
+  });
+
   getEl<HTMLButtonElement>("save-gemini").addEventListener(
     "click",
     saveGeminiSettings
@@ -45,6 +84,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const openRouterKeyInput = getEl<HTMLInputElement>("openrouter-key");
   const openRouterModelSelect = getEl<HTMLSelectElement>("openrouter-model");
+  const modelOptions = Object.values(OpenRouterModel);
+  modelOptions.forEach((model) => {
+    const option = document.createElement("option");
+    option.value = model;
+    option.textContent = model;
+    openRouterModelSelect.appendChild(option);
+  });
   getEl<HTMLButtonElement>("save-openrouter").addEventListener(
     "click",
     saveOpenRouterSettings
@@ -71,14 +117,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function saveGeminiSettings() {
     const geminiKey = geminiKeyInput.value;
-
+    const geminiModel = geminiModelSelect.value;
+    const geminiBudget = geminiRizzSlider.value;
     chrome.storage.local.set(
       {
-        aiProvider: "gemini",
+        aiProvider: AIProvider.GEMINI,
         geminiApiKey: geminiKey,
+        geminiModel: geminiModel,
+        geminiThinkingBudget: geminiBudget,
       },
       () => {
-        showStatus("Zapisano ustawienia Gemini!");
+        showStatus("Gemini settings saved!");
         restoreOptions();
         showView("main-menu");
       }
@@ -105,17 +154,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const restoreOptions = () => {
     chrome.storage.local.get(defaultStorage, (items: ExtensionStorage) => {
-      if (items.aiProvider === "gemini") {
+      geminiKeyInput.value = items.geminiApiKey;
+      const rizzPercent = mapTokensToRizz(items.geminiThinkingBudget);
+      geminiRizzSlider.value = items.geminiThinkingBudget.toString();
+      geminiRizzValue.textContent = `${rizzPercent}%`;
+
+      if (items.aiProvider === AIProvider.GEMINI) {
         currentProviderStatus.textContent = "Gemini";
-      } else if (items.aiProvider === "openrouter") {
+      } else if (items.aiProvider === AIProvider.OPENROUTER) {
         currentProviderStatus.textContent = "OpenRouter";
       } else {
-        currentProviderStatus.textContent = "Nie skonfigurowano";
+        currentProviderStatus.textContent =
+          "Unconfigured. Please set up an AI provider.";
       }
 
       geminiKeyInput.value = items.geminiApiKey;
       openRouterKeyInput.value = items.openRouterApiKey;
       openRouterModelSelect.value = items.openRouterModel;
+      geminiModelSelect.value = items.geminiModel;
     });
   };
 

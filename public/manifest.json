@@ -16,8 +16,8 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["/assessments/*"],
-      "matches": ["<all_urls>"],
+      "resources": ["/assessments/*", "injectHook.js"],
+      "matches": ["*://tinder.com/*"],
       "use_dynamic_url": true
     }
   ],
@@ -26,7 +26,8 @@
     {
       "matches": ["https://tinder.com/*"],
       "js": ["content.js"],
-      "type": "module"
+      "type": "module",
+      "run_at": "document_start"
     }
   ],
   "background": {
