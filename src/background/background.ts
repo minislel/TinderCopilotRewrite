@@ -2,31 +2,19 @@ import { fetchUserId } from "@/tinderAPI";
 import { handleEvaluate } from "@/handlers/evaluate/evaluateHandler";
 import { handleRizz } from "@/handlers/rizz/rizzHandler";
 import { sleep } from "@/utils/sleep";
+import {
+  categorizeIntercept,
+  fetchIntercepts,
+  profileIntercepts,
+  userIntercepts,
+  groupConversationsIntercepts,
+  matchIntercepts,
+  matchListIntercepts,
+} from "@/fetchInterception/fetchResponseStorage";
 export let language: string;
 export let userId: string;
 export let xauthToken: string;
-export const fetchIntercepts: { endpoint: string; data: unknown }[] = [];
-export const profileIntercepts: { endpoint: string; data: unknown }[] = [];
-export const userIntercepts: { endpoint: string; data: unknown }[] = [];
-export const groupConversationsIntercepts: {
-  endpoint: string;
-  data: unknown;
-}[] = [];
-export const matchIntercepts: { endpoint: string; data: unknown }[] = [];
-export const matchesIntercepts: { endpoint: string; data: unknown }[] = [];
-async function categorizeIntercept(endpoint: string, data: unknown) {
-  if (endpoint.includes("/profile")) {
-    profileIntercepts.push({ endpoint, data });
-  } else if (endpoint.includes("/user")) {
-    userIntercepts.push({ endpoint, data });
-  } else if (endpoint.includes("/conversations")) {
-    groupConversationsIntercepts.push({ endpoint, data });
-  } else if (endpoint.includes("/match")) {
-    matchIntercepts.push({ endpoint, data });
-  } else if (endpoint.includes("/matches")) {
-    matchesIntercepts.push({ endpoint, data });
-  }
-}
+
 // async function injectScriptToPage() {
 //   const queryOptions = { active: true };
 //   const [tab] = await chrome.tabs.query(queryOptions);

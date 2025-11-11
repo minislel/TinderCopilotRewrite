@@ -8,7 +8,11 @@ module.exports = {
 
   entry: {
     background: path.resolve(__dirname, "src/background", "background.ts"),
-    injectHook: path.resolve(__dirname, "src/background/", "injectHook.ts"),
+    injectHook: path.resolve(
+      __dirname,
+      "src/fetchInterception",
+      "injectHook.ts"
+    ),
     content: path.resolve(__dirname, "src", "content.ts"),
     popup: path.resolve(__dirname, "src/popup/", "popup.ts"),
   },

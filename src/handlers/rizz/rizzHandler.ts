@@ -2,7 +2,6 @@ import {
   getThreadIdFromUrl,
   xauthToken,
   sendMessageToContentScript,
-  fetchIntercepts,
 } from "@/background/background";
 import { serializeError } from "@/utils/serializeError";
 import { generateMessageSolo } from "./generateSolo";
@@ -11,10 +10,25 @@ import {
   getGroupConversationPartners,
 } from "./generateGroupChat";
 import { fetchMessagesFromAPI, fetchUserMatches } from "@/tinderAPI";
+import {
+  matchIntercepts,
+  matchListIntercepts,
+  profileIntercepts,
+  userIntercepts,
+  groupConversationsIntercepts,
+  fetchIntercepts,
+} from "@/fetchInterception/fetchResponseStorage";
 export async function handleRizz() {
   const Id = await getThreadIdFromUrl(true);
   try {
-    console.log("fetchIntercepts:", fetchIntercepts);
+    console.log("matchIntercepts:", [...matchIntercepts]);
+    console.log("matchListIntercepts:", [...matchListIntercepts]);
+    console.log("profileIntercepts:", [...profileIntercepts]);
+    console.log("userIntercepts:", [...userIntercepts]);
+    console.log("groupConversationsIntercepts:", [
+      ...groupConversationsIntercepts,
+    ]);
+    console.log("fetchIntercepts:", [...fetchIntercepts]);
     if (!Id.includes("-")) {
       // Solo chat handling
       const idShort = await getThreadIdFromUrl(false);
