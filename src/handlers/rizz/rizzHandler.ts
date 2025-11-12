@@ -1,15 +1,11 @@
 import {
   getThreadIdFromUrl,
-  xauthToken,
   sendMessageToContentScript,
 } from "@/background/background";
 import { serializeError } from "@/utils/serializeError";
 import { generateMessageSolo } from "./generateSolo";
-import {
-  generateMessageGroupchat,
-  getGroupConversationPartners,
-} from "./generateGroupChat";
-import { fetchMessagesFromAPI, fetchUserMatches } from "@/tinderAPI";
+import { generateMessageGroupchat } from "./generateGroupChat";
+
 import {
   matchIntercepts,
   matchListIntercepts,
@@ -19,24 +15,24 @@ import {
   fetchIntercepts,
   duoMatchList,
   userProfile,
+  groupConversationsList,
+  profilesList,
+  matchMessagesList,
 } from "@/fetchInterception/fetchResponseStorage";
 export async function handleRizz() {
   const Id = await getThreadIdFromUrl(true);
   try {
-    console.log("matchIntercepts:", [...matchIntercepts]);
-    console.log("matchListIntercepts:", [...matchListIntercepts]);
-    console.log("profileIntercepts:", [...profileIntercepts]);
-    console.log("userIntercepts:", [...userIntercepts]);
-    console.log("groupConversationsIntercepts:", [
-      ...groupConversationsIntercepts,
-    ]);
     console.log("fetchIntercepts:", [...fetchIntercepts]);
     console.log("DuoMatchList:", [...duoMatchList]);
     console.log("UserProfile:", userProfile);
+    console.log("GroupConversationsList:", [...groupConversationsList]);
+    console.log("ProfilesList:", [...profilesList]);
+    console.log("matchIntercepts:", [...matchIntercepts]);
+    console.log("matchMessagesList:", [...matchMessagesList]);
     if (!Id.includes("-")) {
       // Solo chat handling
       const idShort = await getThreadIdFromUrl(false);
-      const data = await fetchMessagesFromAPI(Id, xauthToken);
+      const data = matchMessagesList.get(Id) || [];
       let msg;
       if (data.length === 0) {
         msg = await generateMessageSolo(idShort);
@@ -46,14 +42,13 @@ export async function handleRizz() {
       return { message: msg };
     } else {
       // Group chat handling
-      const messages = await fetchMessagesFromAPI(Id, xauthToken);
-      const matches = await fetchUserMatches(xauthToken);
-      const [buddyId, match1Id, match2Id] = await getGroupConversationPartners(
-        matches,
-        Id
-      );
+      const messages = groupConversationsList.get(Id) || [];
+      const [buddyId, match1Id, match2Id] = duoMatchList.get(Id) || [
+        "",
+        "",
+        "",
+      ];
       let msg;
-      console.log("Group chat IDs:", buddyId, match1Id, match2Id);
       if (messages.length === 0) {
         msg = await generateMessageGroupchat(buddyId, match1Id, match2Id);
       } else {

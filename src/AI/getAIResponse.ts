@@ -9,7 +9,6 @@ export async function getAIResponse(data: any, systemPrompt: string) {
     let selectedProvider: AIProvider = AIProvider.OPENROUTER;
     let providerResult = await chrome.storage.local.get("aiProvider");
     selectedProvider = providerResult.aiProvider || AIProvider.OPENROUTER;
-    console.log("systemPrompt:", systemPrompt);
     if (selectedProvider == AIProvider.GEMINI.valueOf()) {
       const result = await chrome.storage.local.get([
         "geminiApiKey",
@@ -19,9 +18,8 @@ export async function getAIResponse(data: any, systemPrompt: string) {
       const GEMINI_API_KEY = result.geminiApiKey || "";
       const GEMINI_MODEL = result.geminiModel || GeminiModel.GeminiFlashLatest;
       const GEMINI_THINKING_BUDGET = result.geminiThinkingBudget || -1;
-      console.log("apikey:", GEMINI_API_KEY);
-
-      console.log("Using Gemini model");
+      console.log("data sent to Gemini:", data);
+      console.log("systemPrompt sent to Gemini:", systemPrompt);
       return await getGeminiResponse(
         data,
         systemPrompt,
@@ -39,8 +37,7 @@ export async function getAIResponse(data: any, systemPrompt: string) {
       OPENROUTER_API_KEY = configResult.openRouterApiKey || "";
       OPENROUTER_MODEL =
         configResult.openRouterModel || OpenRouterModel.MINIMAX;
-      console.log("Using OpenRouter model:", OPENROUTER_MODEL);
-      console.log("apikey:", OPENROUTER_API_KEY);
+
       return await getOpenRouterResponse(
         data,
         systemPrompt,

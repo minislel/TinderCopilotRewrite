@@ -28,21 +28,23 @@ Prerequisites:
 - Node.js
 - Chrome browser
 - Tinder Account
-- Gemini API key
+- Gemini/Openrouter API key
 
 1. Either clone the repository or download it as .ZIP and unpack it
 
 2. Run `npm install`
 
-3. In background.ts paste your API key
+3. Run `npm run dev`
 
-4. Run `npm run dev`
+4. Go to chrome://extensions/, check "Developer mode" and 'load unpacked', select the `dist` folder
 
-5. Go to chrome://extensions/, check "Developer mode" and 'load unpacked', select the `dist` folder
+5. Open the extension popup, select AI provider and model, Insert your API key
 
 ## TODO
 
-- Error handling
-- User Popup for API key insertion
+- Bug fixes
+- Support for more models
+- Evaluation of currently typed message
 - AI prompt improvement
 - Code cleanup
+- Support for Opera, Firefox

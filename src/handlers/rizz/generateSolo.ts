@@ -1,19 +1,23 @@
 import { Message } from "@/types";
-import { fetchProfileData } from "@/tinderAPI";
+
 import { getAIResponse } from "@/AI/getAIResponse";
 import { firstMessageSoloPrompt, nextMessageSoloPrompt } from "@/AI/prompts";
-import { xauthToken, userId, language } from "@/background/background";
+import { language } from "@/background/background";
+import {
+  profilesList,
+  userProfile,
+} from "@/fetchInterception/fetchResponseStorage";
 export async function generateMessageSolo(
   matchId: string,
   messages?: Array<Message>
 ): Promise<string> {
-  const matchProfile = await fetchProfileData(matchId, xauthToken);
-  const userProfile = await fetchProfileData(userId, xauthToken);
+  const matchProfile = profilesList.get(matchId) || "NONE";
+  console.log("Match Profile:", matchProfile);
   let messageResponse;
   if (messages && messages.length > 0) {
     messageResponse = await getAIResponse(
-      [...messages],
-      nextMessageSoloPrompt(userId, matchProfile, userProfile) as string
+      [...messages].slice(0, 30),
+      nextMessageSoloPrompt(userProfile.id, matchProfile, userProfile) as string
     );
   } else {
     messageResponse = await getAIResponse(

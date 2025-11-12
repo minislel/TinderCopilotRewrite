@@ -1,4 +1,3 @@
-import { fetchUserId } from "@/tinderAPI";
 import { handleEvaluate } from "@/handlers/evaluate/evaluateHandler";
 import { handleRizz } from "@/handlers/rizz/rizzHandler";
 import { sleep } from "@/utils/sleep";
@@ -10,10 +9,9 @@ import {
   groupConversationsIntercepts,
   matchIntercepts,
   matchListIntercepts,
+  userProfile,
 } from "@/fetchInterception/fetchResponseStorage";
 export let language: string;
-export let userId: string;
-export let xauthToken: string;
 
 // async function injectScriptToPage() {
 //   const queryOptions = { active: true };
@@ -40,7 +38,7 @@ export async function getThreadIdFromUrl(full: boolean): Promise<string> {
       matchId = pathSegments.slice(3)[0];
     } else {
       matchId = pathSegments.slice(3)[0]?.substring(0, 24);
-      if (matchId === userId) {
+      if (matchId === userProfile.id) {
         matchId = pathSegments.slice(3)[0]?.substring(24, 49);
       }
     }
@@ -76,8 +74,6 @@ function handleMessages(
       (async () => {
         await sleep(1500);
         language = request.language;
-        xauthToken = await getXauthToken();
-        userId = await fetchUserId(xauthToken);
         // injectScriptToPage();
       })();
       break;
