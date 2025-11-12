@@ -1,32 +1,19 @@
 import {
   getThreadIdFromUrl,
   sendMessageToContentScript,
+  interceptStorage,
 } from "@/background/background";
 import { serializeError } from "@/utils/serializeError";
 import { generateMessageSolo } from "./generateSolo";
 import { generateMessageGroupchat } from "./generateGroupChat";
 
-import {
-  fetchIntercepts,
-  duoMatchList,
-  userProfile,
-  groupConversationsList,
-  profilesList,
-  matchMessagesList,
-} from "@/fetchInterception/fetchResponseStorage";
 export async function handleRizz() {
   const Id = await getThreadIdFromUrl(true);
   try {
-    console.log("fetchIntercepts:", [...fetchIntercepts]);
-    console.log("DuoMatchList:", [...duoMatchList]);
-    console.log("UserProfile:", userProfile);
-    console.log("GroupConversationsList:", [...groupConversationsList]);
-    console.log("ProfilesList:", [...profilesList]);
-    console.log("matchMessagesList:", [...matchMessagesList]);
     if (!Id.includes("-")) {
       // Solo chat handling
       const idShort = await getThreadIdFromUrl(false);
-      const data = matchMessagesList.get(Id) || [];
+      const data = interceptStorage.getMessages(Id) || [];
       let msg;
       if (data.length === 0) {
         msg = await generateMessageSolo(idShort);
@@ -36,12 +23,10 @@ export async function handleRizz() {
       return { message: msg };
     } else {
       // Group chat handling
-      const messages = groupConversationsList.get(Id) || [];
-      const [buddyId, match1Id, match2Id] = duoMatchList.get(Id) || [
-        "",
-        "",
-        "",
-      ];
+      const messages = interceptStorage.getMessages(Id) || [];
+      const [buddyId, match1Id, match2Id] = interceptStorage.getDuoMatch(
+        Id
+      ) || ["", "", ""];
       let msg;
       if (messages.length === 0) {
         msg = await generateMessageGroupchat(buddyId, match1Id, match2Id);

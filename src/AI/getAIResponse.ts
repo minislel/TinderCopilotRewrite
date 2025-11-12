@@ -4,7 +4,13 @@ import { OpenRouterModel } from "./openrouterModelEnum";
 import { AIProvider } from "./AIProviderEnum";
 import { ErrorResponse } from "@/types/error";
 import { GeminiModel } from "./geminiModelEnum";
-export async function getAIResponse(data: any, systemPrompt: string) {
+export async function getAIResponse(
+  data: any,
+  systemPrompt: string,
+  GeminiModelOverride?: string,
+  GeminiThinkingBudgetOverride?: number,
+  GeminiMaxTokensOverride?: number
+) {
   try {
     let selectedProvider: AIProvider = AIProvider.OPENROUTER;
     let providerResult = await chrome.storage.local.get("aiProvider");
@@ -16,8 +22,12 @@ export async function getAIResponse(data: any, systemPrompt: string) {
         "geminiThinkingBudget",
       ]);
       const GEMINI_API_KEY = result.geminiApiKey || "";
-      const GEMINI_MODEL = result.geminiModel || GeminiModel.GeminiFlashLatest;
-      const GEMINI_THINKING_BUDGET = result.geminiThinkingBudget || -1;
+      const GEMINI_MODEL =
+        GeminiModelOverride ||
+        result.geminiModel ||
+        GeminiModel.GeminiFlashLatest;
+      const GEMINI_THINKING_BUDGET =
+        GeminiThinkingBudgetOverride || result.geminiThinkingBudget || -1;
       console.log("data sent to Gemini:", data);
       console.log("systemPrompt sent to Gemini:", systemPrompt);
       return await getGeminiResponse(
@@ -25,7 +35,8 @@ export async function getAIResponse(data: any, systemPrompt: string) {
         systemPrompt,
         GEMINI_API_KEY,
         GEMINI_MODEL,
-        GEMINI_THINKING_BUDGET
+        GEMINI_THINKING_BUDGET,
+        GeminiMaxTokensOverride
       );
     } else if (selectedProvider == AIProvider.OPENROUTER.valueOf()) {
       let OPENROUTER_API_KEY: string = "";
@@ -42,7 +53,7 @@ export async function getAIResponse(data: any, systemPrompt: string) {
         data,
         systemPrompt,
         OPENROUTER_API_KEY,
-        OpenRouterModel.MINIMAX
+        OPENROUTER_MODEL
       );
     }
   } catch (error) {

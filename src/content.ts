@@ -2,6 +2,8 @@ import { Evaluation } from "./types";
 import { sleep } from "./utils/sleep";
 
 let evalCache: Record<string, Array<Evaluation>> = {};
+let debounceTimeout: NodeJS.Timeout | undefined;
+let isSettingCompletion = false;
 function placeButtons() {
   const classes =
     "Lts($ls-s) Z(0) CenterAlign Mx(a) Cur(p) Tt(u) Ell Bdrs(100px) Px(24px) Px(20px)--s Py(0) Mih(40px) Pos(r) Ov(h) C(#fff) Bg($c-pink):h::b Bg($c-pink):f::b Bg($c-pink):a::b Trsdu($fast) Trsp($background) Bg($g-ds-background-brand-gradient) button--primary-shadow StyledButton Bxsh($bxsh-btn) Fw($semibold) focus-button-style Mb(16px) As(fe) ";
@@ -44,6 +46,9 @@ async function injectScriptToPage() {
   console.log("Injected script to page");
 }
 
+// Zrób to raz na początku:
+// injectShadowCompletionStyles();
+
 function showToast(message: string) {
   const existingToast = document.querySelector("#tinderCopilotToast");
   if (existingToast) existingToast.remove();
@@ -81,6 +86,11 @@ async function setup() {
     action: "Setup",
     language: lang,
   });
+  const chatInput = document.querySelector("textarea") as HTMLTextAreaElement;
+  chatInput.addEventListener("input", () => {
+    console.log("Chat input changed:", chatInput.value);
+    debounceAndGetAICompletion();
+  });
 }
 async function applyRizz(event: MouseEvent) {
   event.stopPropagation();
@@ -117,6 +127,75 @@ async function applyRizz(event: MouseEvent) {
     button.textContent = "Rizz me";
     button.style.removeProperty("width");
   }
+}
+async function debounceAndGetAICompletion() {
+  const chatInput = document.querySelector("textarea") as HTMLTextAreaElement;
+  const debounceDelay = 400; // milliseconds
+
+  let response;
+  if (isSettingCompletion) {
+    console.log("Ignorowanie zmiany wywołanej przez shadow completion.");
+    return; // Nie ruszaj debounce'a!
+  }
+  chatInput.removeAttribute("data-shadow-completion");
+  chatInput.style.color = "";
+  if (debounceTimeout !== undefined) {
+    clearTimeout(debounceTimeout);
+  }
+  const oldShadow = document.querySelectorAll(".copilot-completion-shadow");
+  if (oldShadow) oldShadow.forEach((shadow) => shadow.remove());
+  const currentValue = chatInput.value;
+  if (chatInput.value.trim() === "") {
+    return;
+  }
+  debounceTimeout = setTimeout(async () => {
+    console.log("Sending message for AI completion:", chatInput.value);
+    response = await chrome.runtime.sendMessage({
+      action: "GetAICompletion",
+      message: chatInput.value,
+    });
+    console.log("Received AI completion:", response);
+    if (!response || currentValue !== chatInput.value) {
+      return;
+    }
+    showAICompletionShadow(response);
+  }, debounceDelay);
+}
+function showAICompletionShadow(completion: string) {
+  const chatInput = document.querySelector("textarea") as HTMLTextAreaElement;
+  if (!chatInput) return;
+  console.log("Showing AI completion shadow:", completion);
+  const parent = chatInput.parentElement;
+  if (!parent) return;
+
+  // usuwamy starego ducha
+  const oldShadow = document.querySelectorAll(".copilot-completion-shadow");
+  if (oldShadow) oldShadow.forEach((shadow) => shadow.remove());
+
+  const style = getComputedStyle(chatInput);
+
+  const shadow = document.createElement("div");
+  shadow.className = "copilot-completion-shadow";
+  shadow.style.position = "absolute";
+  shadow.style.top = chatInput.offsetTop + "px";
+  shadow.style.left = chatInput.offsetLeft + "px";
+  shadow.style.width = chatInput.offsetWidth + "px";
+  shadow.style.height = chatInput.offsetHeight + "px";
+  shadow.style.overflow = "hidden";
+  shadow.style.pointerEvents = "none";
+  shadow.style.whiteSpace = "pre-wrap";
+  shadow.style.font = style.font;
+  shadow.style.padding = style.padding;
+  shadow.style.lineHeight = style.lineHeight;
+  shadow.style.color = "rgba(255,255,255,0.25)";
+  shadow.style.zIndex = (parseInt(style.zIndex) || 1) + 1 + "";
+  shadow.style.fontStyle = "italic";
+
+  const userText = chatInput.value;
+  shadow.innerHTML =
+    `<span style="opacity:0">${userText}</span>` +
+    `<span style="opacity:0.75">${completion.slice(userText.length)}</span>`;
+  parent.insertBefore(shadow, chatInput);
 }
 
 async function getEvaluations(event: MouseEvent) {
@@ -241,6 +320,7 @@ async function applyCachedEvaluations() {
     await applyEvaluations(cachedEvals);
   }
 }
+
 window.addEventListener("load", () => {
   injectScriptToPage();
   const chatContainer =
@@ -259,6 +339,7 @@ window.addEventListener("load", () => {
           if (placed) {
             console.log("❤️‍🔥Rizz buttons placed!");
             setup();
+
             applyCachedEvaluations();
           }
         }
@@ -274,7 +355,6 @@ window.addEventListener("load", () => {
 });
 window.addEventListener("message", (event) => {
   if (!event.source || event.source !== window) return;
-  console.log("Content script received messageeee:", event.data);
   const msg = event.data;
 
   chrome.runtime.sendMessage({
@@ -283,6 +363,7 @@ window.addEventListener("message", (event) => {
     endpoint: msg.endpoint,
   });
 });
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (sender.id === chrome.runtime.id && request.action === "GetXauthToken") {
     const apiToken = localStorage.getItem("TinderWeb/APIToken");

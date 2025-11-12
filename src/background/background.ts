@@ -1,12 +1,10 @@
 import { handleEvaluate } from "@/handlers/evaluate/evaluateHandler";
 import { handleRizz } from "@/handlers/rizz/rizzHandler";
+import { handleCompletion } from "@/handlers/completion/completionHandler";
 import { sleep } from "@/utils/sleep";
-import {
-  categorizeIntercept,
-  fetchIntercepts,
-  userProfile,
-} from "@/fetchInterception/fetchResponseStorage";
+import { InterceptStorage } from "@/fetchInterception/interceptStorage";
 export let language: string;
+export const interceptStorage = new InterceptStorage();
 
 // async function injectScriptToPage() {
 //   const queryOptions = { active: true };
@@ -33,7 +31,7 @@ export async function getThreadIdFromUrl(full: boolean): Promise<string> {
       matchId = pathSegments.slice(3)[0];
     } else {
       matchId = pathSegments.slice(3)[0]?.substring(0, 24);
-      if (matchId === userProfile.id) {
+      if (matchId === interceptStorage.userProfile.id) {
         matchId = pathSegments.slice(3)[0]?.substring(24, 49);
       }
     }
@@ -53,12 +51,9 @@ export async function sendMessageToContentScript(
   });
   return response;
 }
-export async function getXauthToken(): Promise<string> {
-  const response = await sendMessageToContentScript("GetXauthToken");
-  return response.token as string;
-}
 
 chrome.runtime.onMessage.addListener(handleMessages);
+
 function handleMessages(
   request: any,
   sender: chrome.runtime.MessageSender,
@@ -82,9 +77,13 @@ function handleMessages(
         sendResponse(result);
       });
       return true;
+    case "GetAICompletion":
+      handleCompletion(request.message).then((result) => {
+        sendResponse(result);
+      });
+      return true;
     case "FETCH_INTERCEPT":
-      fetchIntercepts.push({ endpoint: request.endpoint, data: request.data });
-      categorizeIntercept(request.endpoint, request.data);
+      interceptStorage.handleIntercept(request.endpoint, request.data);
       break;
     default:
       sendResponse({});

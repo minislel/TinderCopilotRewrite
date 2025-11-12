@@ -5,14 +5,7 @@ import {
   firstMessageGroupChatPrompt,
   nextMessageGroupChatPrompt,
 } from "@/AI/prompts";
-import { language } from "@/background/background";
-import {
-  duoMatchList,
-  profilesList,
-  groupConversationsList,
-  userProfile,
-} from "@/fetchInterception/fetchResponseStorage";
-import { Profile } from "@/types/profile";
+import { language, interceptStorage } from "@/background/background";
 
 export async function generateMessageGroupchat(
   buddyId: string,
@@ -20,13 +13,13 @@ export async function generateMessageGroupchat(
   match2Id: string,
   messages?: Array<Message>
 ): Promise<string> {
-  const buddyProfile = profilesList.get(buddyId) || "";
-  const match1Profile = profilesList.get(match1Id) || "";
-  const match2Profile = profilesList.get(match2Id) || "";
+  const buddyProfile = interceptStorage.getProfile(buddyId) || "";
+  const match1Profile = interceptStorage.getProfile(match1Id) || "";
+  const match2Profile = interceptStorage.getProfile(match2Id) || "";
   console.log("Buddy Profile:", buddyProfile);
   console.log("Match1 Profile:", match1Profile);
   console.log("Match2 Profile:", match2Profile);
-  console.log("User Profile:", userProfile);
+  console.log("User Profile:", interceptStorage.userProfile);
   let messageResponse;
   if (messages && messages.length > 0) {
     messageResponse = await getAIResponse(
@@ -35,7 +28,7 @@ export async function generateMessageGroupchat(
         buddyProfile,
         match1Profile,
         match2Profile,
-        userProfile
+        interceptStorage.userProfile
       )
     );
   } else {
@@ -46,7 +39,7 @@ export async function generateMessageGroupchat(
         buddyProfile,
         match1Profile,
         match2Profile,
-        userProfile
+        interceptStorage.userProfile
       )
     );
   }

@@ -5,7 +5,8 @@ export async function getGeminiResponse(
   systemPrompt: string,
   ApiKey?: string,
   Model?: GeminiModel,
-  ThinkingBudget?: number
+  ThinkingBudget?: number,
+  MaxTokens?: number
 ) {
   const prompt = {
     contents: [{ role: "user", parts: [{ text: JSON.stringify(data) }] }],
@@ -17,17 +18,33 @@ export async function getGeminiResponse(
     budget = 512;
   }
   const temp = 0.76 + Math.random() * 0.15;
-  const response = await ai.models.generateContent({
-    model: Model || "models/gemini-2.5-flash",
-    contents: prompt.contents,
-    config: {
-      temperature: temp,
-      thinkingConfig: {
-        thinkingBudget: ThinkingBudget || -1,
+  let response;
+  if (MaxTokens && MaxTokens > 0) {
+    response = await ai.models.generateContent({
+      model: Model || "models/gemini-2.5-flash",
+      contents: prompt.contents,
+      config: {
+        temperature: temp,
+        maxOutputTokens: MaxTokens,
+        thinkingConfig: {
+          thinkingBudget: ThinkingBudget || -1,
+        },
+        systemInstruction: systemPrompt,
       },
-      systemInstruction: systemPrompt,
-    },
-  });
+    });
+  } else {
+    response = await ai.models.generateContent({
+      model: Model || "models/gemini-2.5-flash",
+      contents: prompt.contents,
+      config: {
+        temperature: temp,
+        thinkingConfig: {
+          thinkingBudget: ThinkingBudget || -1,
+        },
+        systemInstruction: systemPrompt,
+      },
+    });
+  }
 
   return response.text;
 }
