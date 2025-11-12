@@ -4,11 +4,6 @@ import { sleep } from "@/utils/sleep";
 import {
   categorizeIntercept,
   fetchIntercepts,
-  profileIntercepts,
-  userIntercepts,
-  groupConversationsIntercepts,
-  matchIntercepts,
-  matchListIntercepts,
   userProfile,
 } from "@/fetchInterception/fetchResponseStorage";
 export let language: string;
@@ -78,7 +73,6 @@ function handleMessages(
       })();
       break;
     case "Evaluate":
-      console.log("profileIntercepts in Evaluate handler:", profileIntercepts);
       handleEvaluate().then((result) => {
         sendResponse(result);
       });

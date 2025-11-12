@@ -7,11 +7,6 @@ import { generateMessageSolo } from "./generateSolo";
 import { generateMessageGroupchat } from "./generateGroupChat";
 
 import {
-  matchIntercepts,
-  matchListIntercepts,
-  profileIntercepts,
-  userIntercepts,
-  groupConversationsIntercepts,
   fetchIntercepts,
   duoMatchList,
   userProfile,
@@ -27,7 +22,6 @@ export async function handleRizz() {
     console.log("UserProfile:", userProfile);
     console.log("GroupConversationsList:", [...groupConversationsList]);
     console.log("ProfilesList:", [...profilesList]);
-    console.log("matchIntercepts:", [...matchIntercepts]);
     console.log("matchMessagesList:", [...matchMessagesList]);
     if (!Id.includes("-")) {
       // Solo chat handling

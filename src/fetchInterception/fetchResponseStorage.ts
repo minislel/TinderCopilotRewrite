@@ -2,14 +2,7 @@ import { Message } from "@/types";
 import { Profile } from "@/types/profile";
 
 export const fetchIntercepts: { endpoint: string; data: unknown }[] = [];
-export const profileIntercepts: { endpoint: string; data: unknown }[] = [];
-export const userIntercepts: { endpoint: string; data: unknown }[] = [];
-export const groupConversationsIntercepts: {
-  endpoint: string;
-  data: unknown;
-}[] = [];
-export const matchIntercepts: { endpoint: string; data: unknown }[] = [];
-export const matchListIntercepts: { endpoint: string; data: unknown }[] = [];
+
 export const userProfile: Profile = {} as Profile;
 
 export const duoMatchList: Map<string, Array<string>> = new Map();
@@ -19,13 +12,10 @@ export const matchMessagesList: Map<string, Array<Message>> = new Map();
 
 export async function categorizeIntercept(endpoint: string, data: unknown) {
   if (endpoint.includes("/profile")) {
-    profileIntercepts.push({ endpoint, data });
     parseUserProfile(data);
   } else if (endpoint.includes("/user")) {
-    userIntercepts.push({ endpoint, data });
     parseProfile(data);
   } else if (endpoint.includes("/conversations")) {
-    groupConversationsIntercepts.push({ endpoint, data });
     parseGroupConversations(data, endpoint);
   } else if (endpoint.includes("/matches")) {
     if ((data as any).data?.matches) {
@@ -37,9 +27,6 @@ export async function categorizeIntercept(endpoint: string, data: unknown) {
         }
       }
     }
-
-    matchIntercepts.push({ endpoint, data });
-
     if (endpoint.includes("messages")) {
       parseMatchMessages(data);
     }
