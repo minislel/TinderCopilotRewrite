@@ -1,8 +1,8 @@
 import "./popup.css";
 
-import { AIProvider } from "@/AI/AIProviderEnum";
-import { OpenRouterModel } from "@/AI/openrouterModelEnum";
-import { GeminiModel } from "@/AI/geminiModelEnum";
+import { AIProvider } from "@/background/AI/AIProviderEnum";
+import { OpenRouterModel } from "@/background/AI/openrouterModelEnum";
+import { GeminiModel } from "@/background/AI/geminiModelEnum";
 interface ExtensionStorage {
   aiProvider: AIProvider | null;
   geminiApiKey: string;

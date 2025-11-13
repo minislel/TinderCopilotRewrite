@@ -1,14 +1,17 @@
 import { Message } from "@/types";
 
-import { getAIResponse } from "@/AI/getAIResponse";
-import { firstMessageSoloPrompt, nextMessageSoloPrompt } from "@/AI/prompts";
+import { getAIResponse } from "@/background/AI/getAIResponse";
+import {
+  firstMessageSoloPrompt,
+  nextMessageSoloPrompt,
+} from "@/background/AI/prompts";
 import { language, interceptStorage } from "@/background/background";
 
 export async function generateMessageSolo(
   matchId: string,
   messages?: Array<Message>
 ): Promise<string> {
-  const matchProfile = interceptStorage.getProfile(matchId) || "NONE";
+  const matchProfile = interceptStorage.getProfile(matchId.trim()) || "NONE";
   console.log("Match Profile:", matchProfile);
   let messageResponse;
   if (messages && messages.length > 0) {

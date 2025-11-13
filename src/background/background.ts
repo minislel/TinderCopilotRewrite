@@ -1,8 +1,8 @@
-import { handleEvaluate } from "@/handlers/evaluate/evaluateHandler";
-import { handleRizz } from "@/handlers/rizz/rizzHandler";
-import { handleCompletion } from "@/handlers/completion/completionHandler";
+import { handleEvaluate } from "@/background/handlers/evaluate/evaluateHandler";
+import { handleRizz } from "@/background/handlers/rizz/rizzHandler";
+import { handleCompletion } from "@/background/handlers/completion/completionHandler";
 import { sleep } from "@/utils/sleep";
-import { InterceptStorage } from "@/fetchInterception/interceptStorage";
+import { InterceptStorage } from "@/background/fetchInterception/interceptStorage";
 export let language: string;
 export const interceptStorage = new InterceptStorage();
 
@@ -15,36 +15,24 @@ export const interceptStorage = new InterceptStorage();
 //     world: "MAIN",
 //   });
 // }
-export async function getThreadIdFromUrl(full: boolean): Promise<string> {
-  const queryOptions = { active: true, currentWindow: true };
-  const [tab] = await chrome.tabs.query(queryOptions);
-  if (tab.url?.search("tinder.com") === -1) {
-    return "";
-  } else {
-    const url = new URL(tab.url as string);
-    const pathSegments = url.pathname.split("/");
-    let matchId = null;
-    if (pathSegments[3].includes("-")) {
-      return pathSegments[3];
-    }
-    if (full) {
-      matchId = pathSegments.slice(3)[0];
-    } else {
-      matchId = pathSegments.slice(3)[0]?.substring(0, 24);
-      if (matchId === interceptStorage.userProfile.id) {
-        matchId = pathSegments.slice(3)[0]?.substring(24, 49);
-      }
-    }
-    return matchId as string;
-  }
+export async function getThreadId(full: boolean): Promise<string> {
+  console.log("getThreadId called with full =", full);
+  const result = await sendMessageToContentScript("getThreadId", full);
+
+  console.log("getThreadId result:", result);
+  return result;
 }
 export async function sendMessageToContentScript(
   actionToSend: any,
   dataToSend?: any
 ) {
-  const queryOptions = { active: true };
+  const queryOptions = { active: true, currentWindow: true };
   const [tab] = await chrome.tabs.query(queryOptions);
   console.log(tab);
+  console.log("Sending message to content script:", {
+    action: actionToSend,
+    data: dataToSend,
+  });
   const response = await chrome.tabs.sendMessage(tab.id! as number, {
     action: actionToSend,
     data: dataToSend,
@@ -59,12 +47,13 @@ function handleMessages(
   sender: chrome.runtime.MessageSender,
   sendResponse: (response?: any) => void
 ) {
+  //console.log("Background received message:", request);
   switch (request.action) {
     case "Setup":
       (async () => {
         await sleep(1500);
         language = request.language;
-        // injectScriptToPage();
+        sendResponse({ status: "Setup started" });
       })();
       break;
     case "Evaluate":
@@ -84,6 +73,7 @@ function handleMessages(
       return true;
     case "FETCH_INTERCEPT":
       interceptStorage.handleIntercept(request.endpoint, request.data);
+      sendResponse({ status: "fetch intercepted" });
       break;
     default:
       sendResponse({});

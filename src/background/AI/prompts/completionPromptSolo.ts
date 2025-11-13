@@ -1,9 +1,11 @@
 import { language } from "@/background/background";
+import { Profile } from "@/types";
 import { Message } from "@/types/message";
 
 export const completionPromptSolo = (
   messages: Array<Message>,
-  userId: string
+  userId: string,
+  matchProfile: Profile | undefined
 ) => {
   return `You are a confident and witty dating app wingman helping the user write smooth Tinder messages.
     Your goal: **complete** the user's (${userId}) unfinished message, not reply to it.
@@ -29,7 +31,8 @@ export const completionPromptSolo = (
     - Be confident, cheeky, and smooth — like a pro Tinder dater.
     - Keep in mind that the user's message may not have been replied to yet, so focus on finishing their thought.
     - Keep track of who is speaking based on the "from" IDs in the messages.
-    
+    Here is the match's profile to help you understand their interests and personality:
+    ${matchProfile ? JSON.stringify(matchProfile) : "No profile available"}
     Now, complete the user's message in the same style as before.
 `;
 };

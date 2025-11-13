@@ -1,15 +1,15 @@
 import {
   sendMessageToContentScript,
   interceptStorage,
+  getThreadId,
 } from "@/background/background";
 import { serializeError } from "@/utils/serializeError";
 
-import { getThreadIdFromUrl } from "@/background/background";
 import { evaluateMessages } from "./evaluateMessages";
 
 export async function handleEvaluate() {
   try {
-    const matchId = await getThreadIdFromUrl(true);
+    const matchId = await getThreadId(true);
     const messages = interceptStorage.getMessages(matchId)?.slice(0, 30) || [];
     const evaluation = await evaluateMessages(messages);
 

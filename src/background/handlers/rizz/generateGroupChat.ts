@@ -1,10 +1,10 @@
 import { Message } from "@/types";
 
-import { getAIResponse } from "@/AI/getAIResponse";
+import { getAIResponse } from "@/background/AI/getAIResponse";
 import {
   firstMessageGroupChatPrompt,
   nextMessageGroupChatPrompt,
-} from "@/AI/prompts";
+} from "@/background/AI/prompts";
 import { language, interceptStorage } from "@/background/background";
 
 export async function generateMessageGroupchat(

@@ -1,6 +1,6 @@
 import { Message, Evaluation } from "@/types";
-import { getAIResponse } from "@/AI/getAIResponse";
-import { evaluatePrompt } from "@/AI/prompts";
+import { getAIResponse } from "@/background/AI/getAIResponse";
+import { evaluatePrompt } from "@/background/AI/prompts";
 import { extractJsonString } from "./extractJsonFromAiResponse";
 export async function evaluateMessages(data: Array<Message>) {
   if (data.length === 0) {

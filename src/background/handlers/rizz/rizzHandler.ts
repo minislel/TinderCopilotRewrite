@@ -1,19 +1,23 @@
 import {
-  getThreadIdFromUrl,
   sendMessageToContentScript,
   interceptStorage,
+  getThreadId,
 } from "@/background/background";
+
 import { serializeError } from "@/utils/serializeError";
 import { generateMessageSolo } from "./generateSolo";
 import { generateMessageGroupchat } from "./generateGroupChat";
 
 export async function handleRizz() {
-  const Id = await getThreadIdFromUrl(true);
+  const Id = await getThreadId(true);
+  console.log("Rizz thread ID:", Id);
+  interceptStorage.listAllData();
   try {
     if (!Id.includes("-")) {
       // Solo chat handling
-      const idShort = await getThreadIdFromUrl(false);
-      const data = interceptStorage.getMessages(Id) || [];
+      const idShort = await getThreadId(false);
+      console.log("Solo chat IdShort:", idShort);
+      const data = interceptStorage.getMessages(Id.trim()) || [];
       let msg;
       if (data.length === 0) {
         msg = await generateMessageSolo(idShort);
@@ -23,9 +27,9 @@ export async function handleRizz() {
       return { message: msg };
     } else {
       // Group chat handling
-      const messages = interceptStorage.getMessages(Id) || [];
+      const messages = interceptStorage.getMessages(Id.trim()) || [];
       const [buddyId, match1Id, match2Id] = interceptStorage.getDuoMatch(
-        Id
+        Id.trim()
       ) || ["", "", ""];
       let msg;
       if (messages.length === 0) {

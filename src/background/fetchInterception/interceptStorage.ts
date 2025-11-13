@@ -1,5 +1,5 @@
 import { Message, Profile } from "@/types/";
-
+import { sendMessageToContentScript } from "@/background/background";
 export class InterceptStorage {
   private fetchIntercepts: { endpoint: string; data: unknown }[] = [];
 
@@ -46,6 +46,8 @@ export class InterceptStorage {
       (data as unknown as any).data?.user?._id
     ) {
       this.userProfile.id = (data as unknown as any).data.user._id;
+      console.log("User ID set to:", this.userProfile.id);
+      sendMessageToContentScript("setUserId", this.userProfile.id);
     }
     if (
       this.userProfile.name === undefined &&
@@ -222,6 +224,11 @@ export class InterceptStorage {
     return this.duoMatchList.get(key);
   }
   public getProfile(key: string): Profile | undefined {
+    console.log(`--- DEBUG START ---`);
+    console.log(`Szukam klucza: '${key}'`);
+    console.log(`Czy mapa ma klucz?: ${this.profilesList.has(key)}`);
+    console.log(`Co zwraca GET?:`, this.profilesList.get(key));
+    console.log(`--- DEBUG END ---`);
     return this.profilesList.get(key);
   }
   public getMessages(key: string): Array<Message> | undefined {
@@ -229,5 +236,10 @@ export class InterceptStorage {
   }
   public delete(key: string): boolean {
     return false;
+  }
+  public listAllData(): void {
+    console.log("Duo Matches:", this.duoMatchList);
+    console.log("Profiles:", this.profilesList);
+    console.log("Messages:", this.messagesList);
   }
 }

@@ -10,10 +10,10 @@ module.exports = {
     background: path.resolve(__dirname, "src/background", "background.ts"),
     injectHook: path.resolve(
       __dirname,
-      "src/fetchInterception",
+      "src/background/fetchInterception",
       "injectHook.ts"
     ),
-    content: path.resolve(__dirname, "src", "content.ts"),
+    content: path.resolve(__dirname, "src/content/", "content.ts"),
     popup: path.resolve(__dirname, "src/popup/", "popup.ts"),
   },
 
